@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KidoDino</title>
-<meta name="description" content="KidoDino coloring books for ages 3 to 6, starring Kido, a friendly little dino. Little Dino, Big Adventures!">
+<meta name="description" content="Free learning games and coloring books for ages 3 to 6 with Kido, a friendly little dino. Shapes, sorting, feelings and self-control games, no ads and no sign-up.">
 <meta property="og:title" content="KidoDino – Little Dino, Big Adventures!">
-<meta property="og:description" content="Coloring books for ages 3 to 6, starring Kido, a friendly little dino.">
+<meta property="og:description" content="Coloring books for ages 3 to 6, starring Kido. Which Kido are you today? Take the quiz and get a free coloring page.">
 <meta property="og:image" content="https://kidodino.com/assets/img/share.jpg">
 <meta property="og:url" content="https://kidodino.com/">
 <meta name="twitter:card" content="summary_large_image">
@@ -16,9 +16,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&family=Varela+Round&display=swap">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="game.css">
 </head>
-<!-- SIGN-UP SWITCH: data-signup="off" hides the free-pages sign-up everywhere on this page. Change to "on" to show it. -->
-<body data-signup="off">
+<body>
 <a class="skip" href="#main">Skip to main content</a>
 
 <header class="site-head">
@@ -26,8 +26,9 @@
     <a class="brand" href="./"><img src="assets/img/kidodino-logo-560.png" srcset="assets/img/kidodino-logo-560.png 1x, assets/img/kidodino-logo-1120.png 2x" width="168" height="37" alt="KidoDino home"></a>
     <nav class="nav" aria-label="Main">
       <ul>
+        <li><a href="#games">Play &amp; learn</a></li>
         <li><a href="#books">Books</a></li>
-        <li class="needs-signup"><a href="#free-pages">Free pages</a></li>
+        <li><a href="#quiz">Which Kido are you?</a></li>
         <li><a href="#contact">Contact</a></li>
       </ul>
     </nav>
@@ -38,32 +39,73 @@
   <div class="hero">
     <div class="wrap">
       <div class="hero-copy">
-        <p class="eyebrow">Coloring books for ages 3–6</p>
+        <p class="eyebrow">Play, learn and color · ages 3–6</p>
         <h1>Little Dino, Big Adventures!</h1>
-        <p>Meet Kido, a friendly little dino. Your child colors every adventure with him.</p>
-        <a class="btn needs-signup" href="#free-pages">Get free coloring pages</a>
-        <a class="btn no-signup" href="#books">Meet the books</a>
+        <p>Meet Kido, a curious little dino who learns by playing. Free thinking games for little ones, and coloring books with big pictures that little hands can really finish.</p>
+        <div class="hero-actions">
+          <a class="btn" href="#games">Play &amp; learn with Kido</a>
+          <a class="btn btn-ghost" href="#books">Meet the books</a>
+        </div>
       </div>
-      <div class="hero-kido">
-        <picture>
-          <source type="image/webp" srcset="assets/img/kido-wave-420.webp 420w, assets/img/kido-wave-840.webp 840w" sizes="(max-width: 700px) 260px, 330px">
-          <img src="assets/img/kido-wave-420.png" width="420" height="588" alt="Kido, a smiling green dinosaur with an orange fringe, waving hello.">
-        </picture>
+
+      <!-- ANIMATION SLOT: .stage is reserved for a future hero animation (Lottie, video or sprite).
+           Keep its size; replace the inner .kido block. Today: Kido whose eyes follow the pointer. -->
+      <div class="stage" id="stage">
+        <div class="stage-sun" aria-hidden="true"></div>
+        <button class="kido" id="kido" type="button" aria-describedby="kido-bubble">
+          <span class="visually-hidden">Say hi to Kido</span>
+          <span class="kido-art" data-kido-svg aria-hidden="true"><picture><source type="image/webp" srcset="assets/img/kido-wave-840.webp"><img src="assets/img/kido-wave-420.png" width="420" height="588" alt=""></picture></span>
+        </button>
+        <p class="bubble" id="kido-bubble" aria-live="polite">Hi! I'm Kido!</p>
+        <p class="visually-hidden">Picture: Kido, a smiling green dinosaur with an orange fringe, waving hello. His eyes follow your mouse.</p>
       </div>
     </div>
   </div>
 
-  <section aria-labelledby="meet-title">
+  <section id="games" class="games-band" aria-labelledby="games-title">
     <div class="wrap">
       <div class="section-head">
-        <h2 id="meet-title">Meet Kido</h2>
-        <p class="lede">Kido is a little dino with a big heart. In every book he tries something new, from driving big machines to jumping rope with his friends. The pictures are simple and bold, made for small hands and big crayons.</p>
+        <p class="eyebrow eyebrow-ink">Free · no ads · no sign-up</p>
+        <h2 id="games-title">Play &amp; learn with Kido</h2>
+        <p class="lede">Short games where your child thinks and chooses, not just taps. Each one practises a skill that child-development research links to school readiness: shapes and space, flexible thinking, feelings and self-control. Kido reads every step aloud, so no reading is needed. Best played together.</p>
       </div>
-      <ul class="facts" aria-label="About the books">
-        <li><b>Ages 3–6</b><span>Big, simple shapes with thick, clear lines</span></li>
-        <li><b>50 pictures</b><span>In every book</span></li>
-        <li><b>Single-sided</b><span>The back of every picture is blank, so markers won't bleed through</span></li>
-        <li><b>8.5 × 11 in</b><span>Large, letter-size paperback</span></li>
+      <ul class="game-cards">
+        <li class="game-card">
+          <div class="game-card-art" style="--c:#02A9F7"><svg viewBox="0 0 160 100" aria-hidden="true" focusable="false"><rect x="52" y="48" width="56" height="44" rx="4" fill="#FFC73A" stroke="#2B2D5C" stroke-width="4" stroke-linejoin="round"/><polygon points="80,10 116,48 44,48" fill="#E96FA3" stroke="#2B2D5C" stroke-width="4" stroke-linejoin="round"/><rect x="72" y="64" width="16" height="28" rx="3" fill="#6040B0" stroke="#2B2D5C" stroke-width="4" stroke-linejoin="round"/></svg></div>
+          <div class="game-card-body">
+            <span class="tag">Shapes · early math</span>
+            <h3>Kido Builds</h3>
+            <p>Choose the shape that fits each gap and build a house, a truck and a rocket. Big builders turn the shapes too.</p>
+            <a class="btn" href="play-builds.html">Play <span class="visually-hidden">Kido Builds</span></a>
+          </div>
+        </li>
+        <li class="game-card">
+          <div class="game-card-art" style="--c:#E96FA3"><svg viewBox="0 0 160 100" aria-hidden="true" focusable="false"><circle cx="52" cy="52" r="28" fill="#02A9F7" stroke="#2B2D5C" stroke-width="4" stroke-linejoin="round"/><polygon points="112,22 120,44 143,44 125,58 131,80 112,67 93,80 99,58 81,44 104,44" fill="#FFC73A" stroke="#2B2D5C" stroke-width="4" stroke-linejoin="round"/></svg></div>
+          <div class="game-card-body">
+            <span class="tag">Flexible thinking</span>
+            <h3>Sorting Switch</h3>
+            <p>Sort Kido's toys by color… then the rule changes! Children practise switching rules, a key thinking skill.</p>
+            <a class="btn" href="play-sort.html">Play <span class="visually-hidden">Sorting Switch</span></a>
+          </div>
+        </li>
+        <li class="game-card">
+          <div class="game-card-art" style="--c:#19B3A6"><svg viewBox="0 0 160 100" aria-hidden="true" focusable="false"><circle cx="56" cy="50" r="32" fill="#FFC73A" stroke="#2B2D5C" stroke-width="4" stroke-linejoin="round"/><circle cx="46" cy="44" r="4" fill="#2B2D5C"/><circle cx="66" cy="44" r="4" fill="#2B2D5C"/><path d="M44 58 Q56 70 68 58" fill="none" stroke="#2B2D5C" stroke-width="4" stroke-linecap="round"/><path d="M112 36 c-10 -14 -30 0 0 24 c30 -24 10 -38 0 -24z" fill="#E96FA3" stroke="#2B2D5C" stroke-width="4" stroke-linejoin="round"/></svg></div>
+          <div class="game-card-body">
+            <span class="tag">Feelings · kindness</span>
+            <h3>Kido's Feelings</h3>
+            <p>Find out how Kido's friends feel, then choose what could help. Ends with a calm breath together.</p>
+            <a class="btn" href="play-feelings.html">Play <span class="visually-hidden">Kido's Feelings</span></a>
+          </div>
+        </li>
+        <li class="game-card">
+          <div class="game-card-art" style="--c:#6040B0"><svg viewBox="0 0 160 100" aria-hidden="true" focusable="false"><rect x="58" y="8" width="44" height="86" rx="14" fill="#2B2D5C"/><circle cx="80" cy="30" r="13" fill="#D93A3A"/><circle cx="80" cy="70" r="13" fill="#2E9E4F"/></svg></div>
+          <div class="game-card-body">
+            <span class="tag">Self-control · movement</span>
+            <h3>Kido Says: Freeze!</h3>
+            <p>Tap on green, freeze on red, and on opposite day it flips. Or stand up and freeze-dance with a grown-up.</p>
+            <a class="btn" href="play-freeze.html">Play <span class="visually-hidden">Kido Says: Freeze!</span></a>
+          </div>
+        </li>
       </ul>
     </div>
   </section>
@@ -71,75 +113,110 @@
   <section id="books" aria-labelledby="books-title">
     <div class="wrap">
       <div class="section-head">
-        <h2 id="books-title">The KidoDino books</h2>
-        <p class="lede">Each book has its own color, so little ones can spot their favorite on the shelf.</p>
+        <h2 id="books-title">Pick an adventure</h2>
+        <p class="lede">Every book has 50 pictures and its own color, so little ones can find their favorite on the shelf.</p>
       </div>
-      <ul class="books">
-        <li class="book">
-          <div class="book-band" data-vol="1" style="--vol: var(--vol-azure)" aria-hidden="true"></div>
-          <div class="book-body">
+      <ul class="shelf">
+        <li class="shelf-item">
+          <div class="book3d" style="--vol: var(--vol-azure)">
+            <picture>
+              <source type="image/webp" srcset="assets/img/books/b1-front-480.webp 480w, assets/img/books/b1-front-900.webp 900w" sizes="(max-width: 700px) 60vw, 260px">
+              <img src="assets/img/books/b1-front-480.jpg" width="480" height="621" alt="Cover of BIG MACHINES: Kido waves next to a colored picture of a yellow excavator.">
+            </picture>
+          </div>
+          <div class="shelf-text">
             <h3>BIG MACHINES</h3>
-            <p>Kido drives diggers, cranes and trucks on the building site.</p>
-            <p class="status">Coming soon to Amazon</p>
+            <p>Diggers, cranes, dump trucks and more. Every page names the machine, so your little builder learns new words while coloring.</p>
+            <!-- AMAZON LINK, book 1: replace the href with the book's Amazon page -->
+            <a class="btn btn-buy" href="https://www.amazon.com/s?k=KidoDino+Big+Machines">Buy on Amazon <span class="visually-hidden">: BIG MACHINES (opens Amazon)</span></a>
           </div>
         </li>
-        <li class="book">
-          <div class="book-band" data-vol="2" style="--vol: var(--vol-berry)" aria-hidden="true"></div>
-          <div class="book-body">
+        <li class="shelf-item">
+          <div class="book3d" style="--vol: var(--vol-berry)">
+            <picture>
+              <source type="image/webp" srcset="assets/img/books/b2-front-480.webp 480w, assets/img/books/b2-front-900.webp 900w" sizes="(max-width: 700px) 60vw, 260px">
+              <img src="assets/img/books/b2-front-480.jpg" width="480" height="621" alt="Cover of BUSY DAYS: Kido waves next to a colored picture of himself jumping rope.">
+            </picture>
+          </div>
+          <div class="shelf-text">
             <h3>BUSY DAYS</h3>
-            <p>Everyday adventures with Kido and his friends: a puppy, a triceratops and a long-neck.</p>
-            <p class="status">Coming soon to Amazon</p>
+            <p>Brushing teeth, building towers, splashing in puddles and saying good night. The everyday moments your child knows by heart, with Kido and his friends.</p>
+            <!-- AMAZON LINK, book 2: replace the href with the book's Amazon page -->
+            <a class="btn btn-buy" href="https://www.amazon.com/s?k=KidoDino+Busy+Days">Buy on Amazon <span class="visually-hidden">: BUSY DAYS (opens Amazon)</span></a>
           </div>
         </li>
-        <li class="book">
-          <div class="book-band" data-vol="3" style="--vol: var(--vol-teal)" aria-hidden="true"></div>
-          <div class="book-body">
+        <li class="shelf-item">
+          <div class="book3d" style="--vol: var(--vol-teal)">
+            <div class="cover3" role="img" aria-label="Cover of BIG DREAMS: Kido waves on a teal cover, with a Coming soon sticker.">
+              <span class="cover3-band"><img src="assets/img/kidodino-logo-560.png" width="560" height="124" alt=""><span>COLORING BOOK</span></span>
+              <span class="cover3-title">BIG DREAMS</span>
+              <picture class="cover3-kido"><source type="image/webp" srcset="assets/img/kido-wave-420.webp"><img src="assets/img/kido-wave-420.png" width="420" height="588" alt=""></picture>
+              <span class="cover3-badge"><b>50</b>BIG PAGES</span>
+              <span class="cover3-slogan">Little Dino, Big Adventures!</span>
+              <span class="cover3-age">FOR AGES 3+</span>
+            </div>
+            <span class="soon-tag">Coming soon</span>
+          </div>
+          <div class="shelf-text">
             <h3>BIG DREAMS</h3>
-            <p>Kido tries on the jobs he dreams about, from firefighter to teacher.</p>
-            <p class="status">In the works</p>
+            <p>Firefighter, police officer, teacher… Kido tries on the jobs he dreams about. Now in the making.</p>
+            <p class="status">Coming soon</p>
           </div>
         </li>
       </ul>
     </div>
   </section>
 
-  <section id="free-pages" class="signup needs-signup" aria-labelledby="free-title">
-    <div class="wrap signup-card">
+  <section aria-labelledby="meet-title">
+    <div class="wrap">
       <div class="section-head">
-        <h2 id="free-title">Free coloring pages for your little one</h2>
-        <p class="lede">Parents and guardians: leave your email and we'll send you new Kido pages to print and color, plus a note when a new book comes out.</p>
-        <p class="note">We only collect a parent's email. We never ask for information about children. You can unsubscribe at any time. <a href="privacy.html">Read our privacy notice</a>.</p>
+        <h2 id="meet-title">Made for little hands</h2>
+        <p class="lede">Kido is curious, kind and always happy to try something new. No scary faces, no tricky details. Just a friend your child can color with, page after page.</p>
       </div>
-      <form id="signup-form" novalidate aria-labelledby="free-title">
-        <div class="field">
-          <label for="signup-email">Parent's email address</label>
-          <input type="email" id="signup-email" name="email_address" autocomplete="email" inputmode="email" required aria-describedby="signup-email-error">
-          <p class="error" id="signup-email-error" hidden></p>
-        </div>
-        <div class="field">
-          <div class="check">
-            <input type="checkbox" id="signup-parent" name="fields[parent_confirmed]" value="yes" required aria-describedby="signup-parent-error">
-            <label for="signup-parent">I am a parent or guardian, 18 or older.</label>
-          </div>
-          <p class="error" id="signup-parent-error" hidden></p>
-        </div>
-        <button class="btn" type="submit">Send me free pages</button>
-        <p class="form-status" id="signup-status" role="status" aria-live="polite"></p>
-      </form>
+      <ul class="facts" aria-label="About the books">
+        <li><b>Big pictures, thick lines</b><span>Easy to color inside for a 3-year-old, with room for a 6-year-old to add their own ideas.</span></li>
+        <li><b>Words to read together</b><span>Every picture has a short line, like "Kido digs a hole." New words, first reading.</span></li>
+        <li><b>No bleed-through</b><span>Every picture has a blank back, so markers never spoil the next page.</span></li>
+        <li><b>Quiet, screen-free time</b><span>Fifty pictures for rainy afternoons, car rides and calm moments before bed.</span></li>
+      </ul>
     </div>
   </section>
+
+  <section id="quiz" class="quiz-band" aria-labelledby="quiz-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow eyebrow-ink">A game for ages 3 to 6</p>
+        <h2 id="quiz-title">Which Kido are you today?</h2>
+        <p class="lede">Three questions, tap a picture to answer. Can't read yet? Tap the speaker and Kido reads it to you. Your prize: a free coloring page for today's Kido, ready to print.</p>
+      </div>
+
+      <div class="quiz" id="quiz-app">
+        <ol class="quiz-dots" aria-hidden="true"><li></li><li></li><li></li></ol>
+        <div class="quiz-card" id="quiz-card">
+          <!-- questions are drawn by quiz.js; this fallback shows when scripts are off -->
+          <p>Turn on JavaScript to play and get your free coloring page.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
 
   <section id="contact" aria-labelledby="contact-title">
     <div class="wrap">
       <div class="section-head">
-        <h2 id="contact-title">Say hello</h2>
-        <p class="lede">Questions about the books, or a picture your child colored that you'd like to share? Write to us at <a class="email" href="mailto:kido@kidodino.com">kido@kidodino.com</a>.</p>
+        <h2 id="contact-title">Show us your masterpiece!</h2>
+        <p class="lede">Did your child color a Kido page? Kido would love to see it. Send a photo of the page to <a class="email" href="mailto:kido@kidodino.com">kido@kidodino.com</a>. Please send just the picture, without your child's name or face. Questions about the books are welcome too.</p>
       </div>
     </div>
   </section>
 </main>
 
 <footer class="site-foot">
+  <div class="peek" aria-hidden="true">
+    <div class="peek-rig kido-art" data-kido-svg data-viewbox="0 0 851 700"><picture><source type="image/webp" srcset="assets/img/kido/kido-peek-680.webp"><img src="assets/img/kido/kido-peek-680.png" width="680" height="559" alt=""></picture></div>
+  </div>
   <div class="wrap">
     <p>© 2026 KidoDino</p>
     <ul aria-label="Site information">
@@ -149,6 +226,7 @@
     </ul>
   </div>
 </footer>
-<script src="site.js"></script>
+<script src="kido.js"></script>
+<script src="quiz.js"></script>
 </body>
 </html>

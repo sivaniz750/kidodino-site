@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KidoDino Accessibility</title>
 <meta name="description" content="KidoDino accessibility statement.">
@@ -12,9 +14,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="assets/img/icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/img/icon-180.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&family=Varela+Round&display=swap">
+<link rel="stylesheet" href="tokens.css">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -38,20 +38,22 @@
   <div class="wrap prose">
     <p>We want every parent and caregiver to be able to use kidodino.com, including people who use a screen reader, a keyboard instead of a mouse, screen magnification, or larger text.</p>
     <h2>Standard</h2>
-    <p>The site is built to meet Israeli Standard IS 5568, which is based on the Web Content Accessibility Guidelines (WCAG) 2.0 at level AA. We also follow WCAG 2.1 level AA.</p>
+    <p>We aim to meet the Web Content Accessibility Guidelines (WCAG) 2.2 at level AA, the standard referred to by the ADA, Section 508 and EN 301 549.</p>
     <h2>What we have done</h2>
     <ul>
-      <li>Every page works with a keyboard alone, and the keyboard focus is always clearly visible.</li>
-      <li>A "Skip to main content" link is the first thing on every page.</li>
+      <li>Every page and game works with a keyboard alone, and the keyboard focus is always clearly visible.</li>
+      <li>A "Skip to main content" link is the first thing on every page that has text to read.</li>
       <li>Pages use real headings, landmarks and lists, so screen readers can move around easily.</li>
       <li>Every meaningful image has a text description. Decorative shapes are hidden from screen readers.</li>
-      <li>Text and background colors meet the WCAG AA contrast ratio, in both light and dark mode.</li>
+      <li>Text and background colors meet the WCAG AA contrast ratio.</li>
       <li>Text can be enlarged to 200% without losing content, and the layout adapts to small screens.</li>
-      <li>Every game works with a keyboard, moves focus to each new step, and can read every instruction aloud.</li>
-      <li>Animation is minimal and turns off when your device asks for reduced motion.</li>
+      <li>The games use no words, so no reading is needed, and they have no timers. Nothing in them needs dragging: every move can be made with a single tap, a click or the keyboard.</li>
+      <li>Movement is gentle and is shortened when your device asks for reduced motion.</li>
     </ul>
     <h2>Known limitations</h2>
     <p>The free coloring pages are pictures meant to be printed and colored. Because they are drawings, a screen reader cannot read them in full. If you would like a description of a page, write to us and we will send one.</p>
+    <p>In Kido's Treasure Hunt, the "by color" rounds ask children to tell colors apart. Children who find that hard can switch the same game to "by kind" with the switch at the top, and find things by their shape instead.</p>
+    <p>We test with keyboard, screen magnification and automated checks. We have not yet had a formal audit by an outside expert.</p>
     <h2>Accessibility contact</h2>
     <p>If something on the site is hard to use, or you need information in another format, please write to <a class="email" href="mailto:kido@kidodino.com">kido@kidodino.com</a>. We will reply as soon as we can.</p>
     <p class="note">Last reviewed: November 2026</p>
@@ -60,7 +62,7 @@
 
 <footer class="site-foot">
   <div class="wrap">
-    <p>© 2026 KidoDino</p>
+    <p>Copyright © 2026 Sivan Studio</p>
     <ul aria-label="Site information">
       <li><a href="privacy.html">Privacy</a></li>
       <li><a href="accessibility.html" aria-current="page">Accessibility</a></li>

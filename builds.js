@@ -1,132 +1,89 @@
-/* Kido Builds — choose the shape that fits each gap in a silhouette.
-   Think-and-choose: pick a piece, then the gap it fits. Big builders also rotate pieces.
-   Shapes live in a 100x100 box per slot; each slot has its own place on a 400x300 board. */
+/* Kido Builds (v5c, 12 Nov 2026) – re-specified with Sivan after the first build failed.
+   One rule for the whole game: a place in the picture glows, and the child taps the shape that belongs there; it flies in.
+   Every open place is always drawn on top of what is already built, so nothing waiting can hide. There is no silhouette level
+   and no "tap, then tap a place". Difficulty never changes how you play: it only adds pieces and makes the shapes in the tray
+   more alike (level 1: different kinds of shape; level 2: same kind, other size or direction; level 3: four to choose from).
+   Every shape in the tray has a place in this picture. Based on the shape-composition trajectory of Clements & Sarama. */
 (function () {
-  var board = document.getElementById("board");
-  var C = { sun: "#FFC73A", azure: "#02A9F7", berry: "#E96FA3", teal: "#19B3A6", grape: "#6040B0", green: "#8CC84B" };
-  // shape outlines in a 0..100 box (rot rotates around the center)
-  var SHAPES = {
-    square: '<rect x="8" y="8" width="84" height="84" rx="6"/>',
-    rect: '<rect x="4" y="26" width="92" height="48" rx="6"/>',
-    tri: '<polygon points="50,8 94,90 6,90"/>',
-    circle: '<circle cx="50" cy="50" r="42"/>',
-    semi: '<path d="M6 34 A44 44 0 0 0 94 34 Z"/>'
-  };
-  var NAMES = { square: "square", rect: "rectangle", tri: "triangle", circle: "circle", semi: "half circle" };
-  // levels: slots {s: shape, x, y, w, h (board units), r: rotation, c: color}, decoys, rotate (big builders)
-  var LEVELS = [
-    { name: "a house", done: "Home sweet home!", slots: [{ s: "square", x: 140, y: 140, w: 120, h: 120, c: C.azure }, { s: "tri", x: 120, y: 40, w: 160, h: 110, c: C.berry }] },
-    { name: "a truck", done: "Vroom! The truck drives!", anim: "drive", slots: [
-      { s: "rect", x: 60, y: 90, w: 190, h: 150, c: C.sun }, { s: "square", x: 250, y: 120, w: 90, h: 90, c: C.azure },
-      { s: "circle", x: 85, y: 205, w: 70, h: 70, c: C.grape }, { s: "circle", x: 255, y: 205, w: 70, h: 70, c: C.grape }] },
-    { name: "a rocket", done: "3, 2, 1… blast off!", anim: "launch", decoys: ["square"], slots: [
-      { s: "tri", x: 160, y: 10, w: 80, h: 70, c: C.berry }, { s: "rect", x: 140, y: 80, w: 120, h: 160, r: 90, c: C.azure },
-      { s: "circle", x: 175, y: 115, w: 50, h: 50, c: C.sun }, { s: "tri", x: 95, y: 190, w: 60, h: 80, c: C.teal }, { s: "tri", x: 245, y: 190, w: 60, h: 80, c: C.teal }] },
-    { name: "a boat", done: "The boat sails away!", anim: "drive", big: true, decoys: ["circle"], slots: [
-      { s: "semi", x: 70, y: 160, w: 260, h: 150, c: C.grape }, { s: "rect", x: 150, y: 40, w: 160, h: 30, r: 90, c: C.sun },
-      { s: "tri", x: 200, y: 50, w: 110, h: 120, r: 90, c: C.berry }] }
+  "use strict";
+  var A = KDArt, $ = function (id) { return document.getElementById(id); };
+  // Drawing rules for these pictures (Sivan, 12 Nov): thin contour so lines do not clump; pieces either overlap clearly
+  // (the upper one is listed later) or keep at least 12 units of air; nothing closer than 14 units to the page edge;
+  // a piece inside another one stays 4 units or more away from its edge.
+  var PICS = [
+    { name: "house", move: "jump", p: [["square", 52, 80, 96, 76, "yellow"], ["tri", 36, 22, 128, 62, "red", "up"], ["rect", 106, 106, 28, 46, "blue"], ["square", 64, 96, 28, 28, "blue"], ["circle", 156, 14, 30, 30, "orange"]] },
+    { name: "car", move: "drive", p: [["half", 50, 40, 100, 50, "red", "up"], ["rect", 18, 84, 164, 40, "red"], ["circle", 36, 104, 40, 40, "blue"], ["circle", 124, 104, 40, 40, "blue"], ["square", 87, 54, 26, 26, "yellow"]] },
+    { name: "boat", move: "bob", p: [["rect", 95, 22, 10, 92, "orange"], ["half", 24, 106, 152, 50, "blue", "down"], ["tri", 114, 26, 54, 72, "yellow", "right"], ["tri", 36, 46, 48, 52, "red", "left"]] },
+    { name: "rocket", move: "launch", p: [["tri", 80, 124, 40, 32, "orange", "down"], ["tri", 44, 86, 46, 46, "red", "up"], ["tri", 110, 86, 46, 46, "red", "up"], ["rect", 76, 46, 48, 84, "blue"], ["tri", 70, 12, 60, 40, "red", "up"], ["circle", 86, 60, 28, 28, "yellow"]] },
+    { name: "train", move: "drive", p: [["rect", 34, 48, 22, 40, "blue"], ["rect", 16, 82, 112, 46, "green"], ["rect", 120, 44, 64, 84, "red"], ["circle", 24, 112, 36, 36, "yellow"], ["circle", 72, 112, 36, 36, "yellow"], ["circle", 134, 112, 36, 36, "yellow"], ["square", 138, 58, 28, 28, "blue"]] },
+    { name: "castle", move: "jump", p: [["rect", 18, 58, 40, 98, "orange"], ["rect", 142, 58, 40, 98, "orange"], ["rect", 52, 82, 96, 74, "yellow"], ["tri", 12, 16, 52, 46, "red", "up"], ["tri", 136, 16, 52, 46, "red", "up"], ["half", 82, 112, 36, 40, "blue", "up"]] },
+    { name: "fish", move: "bob", p: [["tri", 116, 48, 62, 84, "yellow", "left"], ["half", 52, 28, 60, 34, "yellow", "up"], ["oval", 22, 48, 114, 84, "orange"], ["circle", 42, 70, 20, 20, "blue"], ["tri", 76, 88, 30, 26, "yellow", "right"]] },
+    { name: "ice cream", move: "jump", p: [["tri", 64, 90, 72, 66, "orange", "down"], ["circle", 52, 46, 54, 54, "red"], ["circle", 94, 46, 54, 54, "yellow"], ["circle", 73, 14, 54, 54, "blue"]] }
   ];
+  var order = [], n = 0, lv = 0, smooth = 0, pic, step = 0, filled = [], misses = 0, picMisses = 0, busy = false, first = true, opts = [];
+  var svg = $("canvas"), tray = $("tray"), live = $("live");
+  var NAMES = { tri: "triangle", half: "half circle", rect: "rectangle", square: "square", circle: "circle", oval: "oval" };
 
-  function svgShape(s, r, fill, stroke, dash) {
-    return '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><g transform="rotate(' + (r || 0) + ' 50 50)" fill="' + fill + '" stroke="' + stroke +
-      '" stroke-width="4" ' + (dash ? 'stroke-dasharray="8 6"' : "") + ' vector-effect="non-scaling-stroke">' + SHAPES[s] + "</g></svg>";
+  function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function shape(p, x, y, w, h) { // element markup for a piece, optionally re-boxed
+    var t = p[0], d = p[6]; x = x === undefined ? p[1] : x; y = y === undefined ? p[2] : y; w = w || p[3]; h = h || p[4];
+    if (t === "circle" || t === "oval") return 'ellipse cx="' + (x + w / 2) + '" cy="' + (y + h / 2) + '" rx="' + w / 2 + '" ry="' + h / 2 + '"';
+    if (t === "square" || t === "rect") return 'rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="5"';
+    if (t === "tri") return 'path d="' + (d === "down" ? "M" + x + " " + y + "H" + (x + w) + "L" + (x + w / 2) + " " + (y + h) : d === "left" ? "M" + (x + w) + " " + y + "V" + (y + h) + "L" + x + " " + (y + h / 2) : d === "right" ? "M" + x + " " + y + "V" + (y + h) + "L" + (x + w) + " " + (y + h / 2) : "M" + (x + w / 2) + " " + y + "L" + (x + w) + " " + (y + h) + "H" + x) + 'Z"';
+    return 'path d="' + (d === "down" ? "M" + x + " " + y + "H" + (x + w) + "A" + w / 2 + " " + h + " 0 0 1 " + x + " " + y : "M" + x + " " + (y + h) + "A" + w / 2 + " " + h + " 0 0 1 " + (x + w) + " " + (y + h)) + 'Z"';
   }
-
-  var level = 0, big = false, list = [], pieces = [], picked = null, placed = 0, tries = 0;
-
-  function begin(choice) { big = choice === 1; list = big ? LEVELS : LEVELS.slice(0, 3); level = 0; build(); }
-
-  function build() {
-    var L = list[level]; placed = 0; picked = null; tries = 0;
-    KG.steps(level, list.length);
-    // pieces: one per slot (+ decoys); big builders get pieces turned the wrong way
-    pieces = L.slots.map(function (sl, i) { return { id: i, s: sl.s, r: sl.r || 0, c: sl.c, cur: (big && (sl.s === "tri" || sl.s === "rect" || sl.s === "semi")) ? ((sl.r || 0) + 90) % 360 : (sl.r || 0) }; });
-    (L.decoys || []).forEach(function (d, i) { pieces.push({ id: "d" + i, s: d, r: 0, c: C.green, cur: 0, decoy: true }); });
-    pieces = KG.shuffle(pieces);
-    var h = '<div class="build-area"><div class="build-board" id="bb" role="group" aria-label="Kido\'s ' + L.name.replace("a ", "") + ' outline">';
-    L.slots.forEach(function (sl, i) {
-      h += '<button type="button" class="slot" data-i="' + i + '" style="left:' + (sl.x / 4) + '%;top:' + (sl.y / 3) + '%;width:' + (sl.w / 4) + '%;height:' + (sl.h / 3) + '%" aria-label="Empty gap: ' + NAMES[sl.s] + ' shape">' +
-        svgShape(sl.s, sl.r, "transparent", "currentColor", true) + "</button>";
-    });
-    h += '</div><div class="tray" role="group" aria-label="Shapes to choose from">';
-    pieces.forEach(function (p) { h += '<button type="button" class="piece" data-id="' + p.id + '" aria-label="' + NAMES[p.s] + '">' + svgShape(p.s, p.cur, p.c, "#2B2D5C") + "</button>"; });
-    h += '</div>' + (big ? '<button type="button" class="icon-btn rotate-btn" id="rot" disabled><span aria-hidden="true">↻</span> Turn the shape</button>' : "") + "</div>";
-    board.innerHTML = h;
-    board.querySelectorAll(".piece").forEach(function (b) { b.addEventListener("click", function () { pick(b); }); });
-    board.querySelectorAll(".slot").forEach(function (b) { b.addEventListener("click", function () { place(b); }); });
-    var rot = document.getElementById("rot"); if (rot) rot.addEventListener("click", turn);
-    KG.say("Let's build " + L.name + "! First, tap a shape. Then tap the gap where it fits.");
-    KG.focus(board.querySelector(".piece"));
+  function drawn(p) { return A.B(p[5], shape(p)).replace('stroke-width="13"', 'stroke-width="7"') + A.H(p[1] + p[3] * 0.3, p[2] + p[4] * (p[0] === "tri" && p[6] !== "down" ? 0.62 : 0.26), Math.max(3, p[3] * 0.09), Math.max(2, p[4] * 0.05), -25); }
+  function tile(p) { // the piece alone, fitted in a 120 box, for the tray and for flying
+    var s = 96 / Math.max(p[3], p[4]), w = p[3] * s, h = p[4] * s, q = p.slice(); q[1] = 60 - w / 2; q[2] = 60 - h / 2; q[3] = w; q[4] = h; return A.svg(drawn(q)); }
+  function same(a, b) { return a[0] === b[0] && (a[6] || "") === (b[6] || "") && Math.abs(a[3] - b[3]) < 6 && Math.abs(a[4] - b[4]) < 6; }
+  function render() {
+    // built pieces first, then the glowing place, then the dashed outlines of every other open place on top, so no waiting place is ever covered
+    var h = '<g id="art">';
+    pic.p.forEach(function (p, i) { if (filled[i]) h += '<g class="piece' + (filled[i] === 2 ? "" : " old") + '">' + drawn(p) + "</g>"; });
+    if (step < pic.p.length) h += "<" + shape(pic.p[step]) + ' class="gap now"/>';
+    pic.p.forEach(function (p, i) { if (!filled[i] && i !== step) h += "<" + shape(p) + ' class="gap"/>'; });
+    svg.innerHTML = h + "</g>"; pic.p.forEach(function (p, i) { if (filled[i] === 2) filled[i] = 1; });
+    [].forEach.call(svg.querySelectorAll(".old"), function (g) { g.style.animation = "none"; });
   }
-
-  function find(id) { return pieces.filter(function (p) { return String(p.id) === String(id); })[0]; }
-
-  function pick(b) {
-    board.querySelectorAll(".piece").forEach(function (x) { x.classList.remove("picked"); x.setAttribute("aria-pressed", "false"); });
-    b.classList.add("picked"); b.setAttribute("aria-pressed", "true");
-    picked = find(b.dataset.id);
-    var rot = document.getElementById("rot"); if (rot) rot.disabled = false;
-    KG.say("A " + NAMES[picked.s] + "! Where does it fit?");
+  function fillTray() {
+    var need = pic.p[step], rest = [], size = lv === 2 ? 4 : 3, h = "";
+    pic.p.forEach(function (p, i) { if (!filled[i] && i !== step && !same(p, need) && !rest.some(function (r) { return same(r, p); })) rest.push(p); });
+    shuffle(rest);
+    // level 1 prefers other kinds of shape; levels 2 and 3 prefer the same kind in another size or direction
+    rest.sort(function (a, b) { var x = a[0] === need[0] ? 1 : 0, y = b[0] === need[0] ? 1 : 0; return lv === 0 ? x - y : y - x; });
+    opts = shuffle([need].concat(rest.slice(0, size - 1)));
+    opts.forEach(function (o, k) { h += '<button type="button" style="animation-delay:' + k * 60 + 'ms" data-k="' + k + '" aria-label="' + o[5] + " " + NAMES[o[0]] + '">' + tile(o) + "</button>"; });
+    tray.innerHTML = h; live.textContent = "Building a " + pic.name + ". Which shape fits the glowing place?";
   }
-
-  function turn() {
-    if (!picked) return;
-    picked.cur = (picked.cur + 90) % 360;
-    var b = board.querySelector('.piece[data-id="' + picked.id + '"]');
-    b.innerHTML = svgShape(picked.s, picked.cur, picked.c, "#2B2D5C");
-    KG.say("Turned!", true);
+  function slotRect(i) { var p = pic.p[i], m = svg.getScreenCTM(); return { left: m.e + p[1] * m.a, top: m.f + p[2] * m.d, width: p[3] * m.a, height: p[4] * m.d }; }
+  function hint() { if (busy) return; var k = opts.indexOf(pic.p[step]); if (k > -1 && tray.children[k]) { tray.children[k].classList.add("glow"); KP.hand(tray.children[k]); } }
+  function pickTray(btn) {
+    if (busy) return; var o = opts[+btn.dataset.k], i = step;
+    if (!same(o, pic.p[i])) { misses++; picMisses++; KP.sfx.no(); KP.kido("nope"); btn.classList.remove("wob"); void btn.offsetWidth; btn.classList.add("wob"); if (misses >= 2) hint(); return; }
+    var from = btn.querySelector("svg").getBoundingClientRect(), to = slotRect(i), s = Math.max(to.width, to.height) * 120 / 96; busy = true; KP.hideHand();
+    to = { left: to.left + to.width / 2 - s / 2, top: to.top + to.height / 2 - s / 2, width: s, height: s }; btn.style.visibility = "hidden"; KP.sfx.yes(i);
+    KP.fly(tile(pic.p[i]), from, to, function () { filled[i] = 2; misses = 0; KP.sparkle(to.left + s / 2, to.top + s / 2);
+      step = 0; while (step < pic.p.length && filled[step]) step++;
+      render(); if (step >= pic.p.length) { tray.innerHTML = ""; done(); return; } fillTray(); busy = false; });
   }
-
-  function same(a, b, s) { // rotation equality allowing shape symmetry
-    var d = ((a - b) % 360 + 360) % 360;
-    if (s === "circle" || s === "square") return true;
-    if (s === "rect") return d % 180 === 0;
-    return d === 0;
+  function done() {
+    KP.sfx.full(); KP.kido("dance"); $("art").classList.add("alive", pic.move); live.textContent = "You built a " + pic.name + "!";
+    setTimeout(function () { var s = KP.star(); first = false;
+      if (picMisses <= 1) { smooth++; if (smooth >= 2 && KP.level() === "auto" && lv < 2) { lv++; smooth = 0; } } else { smooth = 0; if (picMisses >= 4 && KP.level() === "auto" && lv > 0) lv--; }
+      if (s >= 5) { setTimeout(KP.finish, 900); return; } n++; setTimeout(next, 700); }, KP.reduce ? 600 : 2100);
   }
+  function next() { pic = PICS[order[n % order.length]]; step = 0; filled = []; misses = 0; picMisses = 0; busy = false; KP.field(n + 3); render(); fillTray(); }
 
-  function place(slotBtn) {
-    var sl = list[level].slots[+slotBtn.dataset.i];
-    if (slotBtn.classList.contains("filled")) return;
-    if (!picked) { KG.say("First tap a shape from the bottom."); KG.flash(board.querySelector(".tray"), "shake"); return; }
-    if (picked.s !== sl.s) {
-      tries++;
-      KG.flash(slotBtn, "shake");
-      KG.say(tries > 1 ? "This gap needs a " + NAMES[sl.s] + ". Can you find it?" : "Hmm, that shape doesn't fit here. Look at the corners!");
-      return;
-    }
-    if (!same(picked.cur, sl.r || 0, sl.s)) { KG.flash(slotBtn, "shake"); KG.say("Right shape! Now turn it so it fits."); return; }
-    slotBtn.classList.add("filled"); slotBtn.innerHTML = svgShape(sl.s, sl.r, sl.c, "#2B2D5C"); slotBtn.setAttribute("aria-label", NAMES[sl.s] + " placed");
-    KG.flash(slotBtn, "pop");
-    var pb = board.querySelector('.piece[data-id="' + picked.id + '"]'); pb.disabled = true; pb.classList.remove("picked"); pb.classList.add("used");
-    picked = null; placed++; tries = 0;
-    var rot = document.getElementById("rot"); if (rot) rot.disabled = true;
-    if (placed === list[level].slots.length) return complete();
-    KG.say(KG.praise() + " What's next?");
-    KG.focus(board.querySelector(".piece:not([disabled])"));
-  }
+  tray.addEventListener("pointerdown", function (e) { var b = e.target.closest("button"); if (b) { e.preventDefault(); pickTray(b); } });
+  tray.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b && e.detail === 0) pickTray(b); });
+  $("kido").addEventListener("click", function () { KP.kido("hop"); hint(); });
 
-  function complete() {
-    var L = list[level];
-    var bb = document.getElementById("bb");
-    if (!KG.reduce && L.anim) bb.classList.add(L.anim);
-    KG.hop();
-    KG.say(L.done);
-    setTimeout(function () {
-      level++;
-      if (level < list.length) return build();
-      KG.finish(board, {
-        title: "You built them all!", total: list.length,
-        say: "You built them all! You are a great builder!",
-        skill: "Spatial thinking: seeing how shapes fit together" + (big ? " and turning them in the mind" : "") + ". Spatial skills like these are linked to later math learning.",
-        ask: "Look around the room together. Which things are made of circles? Of rectangles?",
-        again: function () { begin(big ? 1 : 0); }
-      });
-    }, KG.reduce ? 900 : 1700);
-  }
-
-  KG.start(board, {
-    intro: "Kido has shapes, and lots of ideas. Who is building today?",
-    say: "Hi! I love to build. Choose your builder!",
-    levels: [{ icon: "🧱", label: "Little builder (3–4)" }, { icon: "🏗️", label: "Big builder (5–6)" }]
-  }, begin);
+  KP.init({
+    title: "For grown-ups: Kido Builds",
+    about: "<p>Your child builds a picture out of simple shapes. One place in the picture glows, and your child chooses the shape that belongs there. As the game goes on there are more pieces, and the shapes to choose from look more alike: a big and a small triangle, a tall and a wide rectangle. Seeing how small shapes make a bigger one is <b>spatial thinking</b>, one of the strongest early foundations for math.</p><h3>Play it at home</h3><p>Cut a circle, a square and a few triangles from paper. What can you build together? Name the shapes as you go.</p>",
+    onStart: function () { n = 0; first = true; smooth = 0; lv = KP.level() === "hard" ? 2 : 0; order = shuffle([0, 1, 2, 3, 4, 5, 6, 7]); next(); },
+    onLevel: function (l) { if (l !== "auto") { lv = l === "hard" ? 2 : 0; if (pic && !busy) fillTray(); } },
+    onIdle: hint,
+    practice: "Today: putting shapes together to make a bigger picture, an early building block of math."
+  });
 })();

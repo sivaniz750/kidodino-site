@@ -2,50 +2,33 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Kido Builds – KidoDino</title>
-<meta name="description" content="Help Kido build: choose the shape that fits each gap. A free learning game from KidoDino for ages 3 to 6.">
+<title>Kido Builds · KidoDino</title>
+<meta name="description" content="A free, wordless shape game for ages 3 to 6: build a house, a rocket and a train from circles, squares and triangles. No ads, no sign-up.">
+<meta name="theme-color" content="#6040B0">
 <link rel="icon" href="assets/img/icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/img/icon-180.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&family=Varela+Round&display=swap">
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="game.css">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="play.css">
 </head>
-<body class="game-page">
-<a class="skip" href="#main">Skip to the game</a>
-<header class="site-head">
-  <div class="wrap">
-    <a class="brand" href="./"><img src="assets/img/kidodino-logo-560.png" srcset="assets/img/kidodino-logo-560.png 1x, assets/img/kidodino-logo-1120.png 2x" width="168" height="37" alt="KidoDino home"></a>
-    <nav class="nav" aria-label="Main"><ul><li><a href="./#games">All games</a></li><li><a href="./#books">Books</a></li></ul></nav>
-  </div>
-</header>
-<main id="main" tabindex="-1">
-  <div class="wrap game-wrap">
-    <div class="game-head">
-      <div><h1>Kido Builds</h1><p class="game-skill">Shapes and spatial thinking · ages 3–6</p></div>
-      <ol class="steps" id="steps" aria-hidden="true"></ol>
+<body>
+<main class="stage">
+  <h1 class="sr">Kido Builds</h1>
+  <div class="field build">
+    <div class="hills" id="hills"></div>
+    <div class="side">
+      <button class="kido" id="kido" type="button" aria-label="Kido: show me a hint"><span class="kido-art" data-kido-svg aria-hidden="true"><img src="assets/img/kido-wave-420.png" width="420" height="588" alt=""></span></button>
     </div>
-    <div class="talk">
-      <span class="kido-art" data-kido-svg aria-hidden="true"><img src="assets/img/kido-wave-420.png" width="420" height="588" alt=""></span>
-      <p class="talk-text" id="talk-text" aria-live="polite">Help Kido build: choose the shape that fits each gap.</p>
-      <div class="talk-tools">
-        <button type="button" class="icon-btn" id="say-again"><span aria-hidden="true">🔁</span><span class="visually-hidden">Say it again</span></button>
-        <button type="button" class="icon-btn" id="sound-btn" aria-pressed="true"><span class="ico" aria-hidden="true">🔊</span><span class="lbl visually-hidden">Sound</span></button>
-      </div>
-    </div>
-    <div class="board" id="board"><p>Loading the game…</p></div>
+    <div class="page"><svg id="canvas" viewBox="0 0 200 170" role="img" aria-label="The picture you are building"></svg></div>
+    <div class="tray" id="tray" role="group" aria-label="Shapes"></div>
   </div>
+  <p class="sr" id="live" aria-live="polite"></p>
 </main>
-<footer class="site-foot">
-  <div class="wrap">
-    <p>© 2026 KidoDino</p>
-    <ul aria-label="Site information"><li><a href="privacy.html">Privacy</a></li><li><a href="accessibility.html">Accessibility</a></li><li><a href="mailto:kido@kidodino.com">kido@kidodino.com</a></li></ul>
-  </div>
-</footer>
-<script src="kido.js"></script>
-<script src="shell.js"></script>
+<script src="kd-art.js"></script>
+<script src="kd-play.js"></script>
 <script src="builds.js"></script>
+<script src="kido.js"></script>
 </body>
 </html>

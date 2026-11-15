@@ -6,30 +6,19 @@
   var dots = document.querySelectorAll(".quiz-dots li");
 
   var QUESTIONS = [
-    { q: "How does your body feel today?", a: [
-      ["bouncy", "🤸", "Bouncy!"], ["builder", "💪", "Strong!"], ["cozy", "🧸", "Snuggly"], ["explorer", "🔍", "Curious"] ] },
-    { q: "Where do you want to go?", a: [
-      ["builder", "🚧", "The building site"], ["explorer", "⛺", "The forest"], ["bouncy", "🛝", "The playground"], ["cozy", "📚", "A cozy reading corner"] ] },
-    { q: "Pick a sound!", a: [
-      ["cozy", "🌙", "Shhh…"], ["bouncy", "🦘", "BOING!"], ["explorer", "✨", "Ooooh!"], ["builder", "🚜", "VROOM!"] ] }
+    { q: "How does my body feel?", a: [
+      ["bouncy", "ball:orange", "Bouncy!"], ["builder", "block:red", "Strong!"], ["cozy", "teddy:wood", "Snuggly"], ["explorer", "magnifier:blue", "Curious"] ] },
+    { q: "Where do I want to go?", a: [
+      ["builder", "truck:yellow", "The building site"], ["explorer", "tent:green", "Camping"], ["bouncy", "kite:pink", "The playground"], ["cozy", "book:blue", "A cozy corner"] ] },
+    { q: "What sound do I make?", a: [
+      ["cozy", "moon:yellow", "Shhh…"], ["bouncy", "balloon:red", "BOING!"], ["explorer", "star:yellow", "Ooooh!"], ["builder", "car:green", "VROOM!"] ] }
   ];
   var KIDOS = {
-    builder: { name: "Builder Kido", line: "You are strong and ready to dig! Today you drive the mini excavator with Kido.", page: "builder" },
-    bouncy: { name: "Bouncy Kido", line: "Boing, boing! You have happy feet today. Jump on the trampoline with Kido.", page: "bouncy" },
-    cozy: { name: "Cozy Kido", line: "Today is a calm day for a good story. Snuggle up and read with Kido.", page: "cozy" },
-    explorer: { name: "Explorer Kido", line: "You want to discover new things! Go camping under the stars with Kido.", page: "explorer" }
+    bouncy: { name: "I am bouncy!", line: "I have happy feet, and I love to move.", say: "I am bouncy!", page: "dance" },
+    builder: { name: "I am strong!", line: "I can push, lift and build big things.", say: "I am strong!", page: "bulldozer" },
+    cozy: { name: "I am calm.", line: "I like quiet moments and soft snuggles.", say: "I am calm.", page: "goodnight" },
+    explorer: { name: "I am curious!", line: "I ask questions and find new things.", say: "I am curious!", page: "telescope" }
   };
-
-  var canSpeak = "speechSynthesis" in window && typeof SpeechSynthesisUtterance === "function";
-  function say(text) {
-    if (!canSpeak) return;
-    try {
-      window.speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(text);
-      u.lang = "en-US"; u.rate = 0.9; u.pitch = 1.2;
-      window.speechSynthesis.speak(u);
-    } catch (e) { /* speech is a bonus; the text is always on screen */ }
-  }
 
   var step = 0, votes = [];
 
@@ -37,24 +26,18 @@
     Array.prototype.forEach.call(dots, function (d, i) { d.className = i < n ? "done" : (i === n ? "now" : ""); });
   }
 
-  function speakerButton(text) {
-    if (!canSpeak) return "";
-    return '<button type="button" class="speak" data-say="' + text.replace(/"/g, "&quot;") + '">' +
-      '<span aria-hidden="true">🔊</span> Read it to me</button>';
-  }
-
   function showQuestion() {
     var Q = QUESTIONS[step];
     setDots(step);
-    var html = '<p class="quiz-step">Question ' + (step + 1) + ' of ' + QUESTIONS.length + '</p>' +
-      '<h3 class="quiz-q" tabindex="-1">' + Q.q + '</h3>' + speakerButton(Q.q + " " + Q.a.map(function (a) { return a[2]; }).join(", ")) +
+    var html = '<p class="visually-hidden">Question ' + (step + 1) + ' of ' + QUESTIONS.length + '</p>' +
+      '<p class="quiz-title quiz-q" tabindex="-1">' + Q.q + '</p>' +
       '<ul class="answers">';
     Q.a.forEach(function (a) {
       html += '<li><button type="button" class="answer" data-kido="' + a[0] + '">' +
-        '<span class="answer-icon" aria-hidden="true">' + a[1] + '</span><span class="answer-label">' + a[2] + '</span></button></li>';
+        (window.KDArt ? KDArt.thing(a[1].split(":")[0], a[1].split(":")[1]) : "") + '<span>' + a[2] + '</span></button></li>';
     });
     html += "</ul>";
-    card.innerHTML = html;
+    card.innerHTML = html; card.querySelector(".answers").classList.add("q-in"); card.querySelector(".quiz-q").classList.add("q-in");
     if (step > 0) card.querySelector(".quiz-q").focus();
   }
 
@@ -71,29 +54,31 @@
     card.innerHTML =
       '<div class="result">' +
         '<div class="result-copy">' +
-          '<p class="quiz-step">Today you are…</p>' +
-          '<h3 class="quiz-q result-name" tabindex="-1">' + K.name + '!</h3>' +
+          '<p class="t-small">Today:</p>' +
+          '<p class="t-h3 quiz-q result-name" tabindex="-1">' + K.name + '</p>' +
           '<p>' + K.line + '</p>' +
-          speakerButton("Today you are " + K.name + "! " + K.line) +
+          '<p class="t-small say">Say it together: “' + K.say + '”</p>' +
           '<div class="result-actions">' +
-            '<a class="btn" href="downloads/kido-' + K.page + '-coloring-page.pdf" download>Get my coloring page <span class="small">(PDF)</span></a>' +
-            '<button type="button" class="btn btn-ghost-ink" id="quiz-again">Play again</button>' +
+            '<a class="btn" href="downloads/kido-' + K.page + '-coloring-page.pdf" download>Get my coloring page</a>' +
+            '<button type="button" class="btn btn-2" id="quiz-again">Play again</button>' +
           '</div>' +
         '</div>' +
-        '<img class="result-page" src="assets/img/pages/' + K.page + '-600.jpg" width="600" height="776" alt="Coloring page preview: ' + K.name + '.">' +
+        '<img src="assets/img/pages/' + K.page + '-600.jpg" width="600" height="776" alt="Your coloring page">' +
       '</div>';
+    card.querySelector(".result").classList.add("q-in");
     card.querySelector(".result-name").focus();
     document.getElementById("quiz-again").addEventListener("click", function () { step = 0; votes = []; showQuestion(); card.querySelector(".quiz-q").focus(); });
   }
 
+  // the chosen answer lights up for a moment, so the child sees what they picked, then the next question slides in
+  var busy = false, reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   card.addEventListener("click", function (ev) {
-    var sp = ev.target.closest(".speak");
-    if (sp) { say(sp.dataset.say); return; }
     var btn = ev.target.closest(".answer");
-    if (!btn) return;
+    if (!btn || busy) return;
+    busy = true; btn.classList.add("picked");
     votes.push(btn.dataset.kido);
     step++;
-    if (step < QUESTIONS.length) showQuestion(); else showResult();
+    setTimeout(function () { busy = false; if (step < QUESTIONS.length) showQuestion(); else showResult(); }, reduce ? 60 : 160);
   });
 
   showQuestion();

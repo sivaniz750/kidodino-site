@@ -31,10 +31,24 @@
       if (!r.width) return;
       var dx = px - (r.left + r.width / 2), dy = py - (r.top + r.height / 2);
       var d = Math.sqrt(dx * dx + dy * dy) || 1, f = Math.min(1, d / 260);
-      e.look.setAttribute("transform", "translate(" + (dx / d * f * e.mx).toFixed(1) + " " + (dy / d * f * e.my).toFixed(1) + ")");
+      e.tx = dx / d * f * e.mx; e.ty = dy / d * f * e.my; wake();
     });
   }
-  function lookHome() { eyes.forEach(function (e) { e.look.removeAttribute("transform"); }); }
+  function lookHome() { eyes.forEach(function (e) { e.tx = 0; e.ty = 0; }); wake(); }
+  // critically damped spring (no overshoot, ~0.25s): the pupil keeps its speed when the target changes
+  var running = false, last = 0;
+  function wake() { if (!running) { running = true; last = 0; requestAnimationFrame(step); } }
+  function step(t) {
+    var dt = last ? Math.min(0.05, (t - last) / 1000) : 1 / 60, moving = false, w = 2 * Math.PI / 0.25; last = t;
+    eyes.forEach(function (e) {
+      e.x = e.x || 0; e.y = e.y || 0; e.vx = e.vx || 0; e.vy = e.vy || 0; e.tx = e.tx || 0; e.ty = e.ty || 0;
+      if (reduce) { e.x = e.tx; e.y = e.ty; e.vx = e.vy = 0; }
+      else { e.vx += (w * w * (e.tx - e.x) - 2 * w * e.vx) * dt; e.vy += (w * w * (e.ty - e.y) - 2 * w * e.vy) * dt; e.x += e.vx * dt; e.y += e.vy * dt; }
+      if (Math.abs(e.tx - e.x) > 0.05 || Math.abs(e.ty - e.y) > 0.05 || Math.abs(e.vx) > 0.5 || Math.abs(e.vy) > 0.5) moving = true; else { e.x = e.tx; e.y = e.ty; e.vx = e.vy = 0; }
+      e.look.setAttribute("transform", "translate(" + e.x.toFixed(2) + " " + e.y.toFixed(2) + ")");
+    });
+    if (moving) requestAnimationFrame(step); else running = false;
+  }
 
   function blink() {
     eyes.forEach(function (e) {

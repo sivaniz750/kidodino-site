@@ -41,7 +41,7 @@
       '<div class="choices"><button class="round big" type="button" id="again" aria-label="Play again">' + A.icon("again") + '</button><a class="round big" href="./#games" aria-label="Back to all games">' + A.icon("home") + "</a></div>" +
       '<p class="end-note">' + (cfg.practice || "") + "</p></div>";
     document.body.appendChild(end);
-    $("#again", end).addEventListener("click", function () { end.hidden = true; document.body.classList.remove("done"); stars = 0; drawStars(); cfg.onStart(); });
+    $("#again", end).addEventListener("click", function () { end.hidden = true; behind(false); document.body.classList.remove("done"); stars = 0; drawStars(); cfg.onStart(); });
     var panel = el("section", "panel"); panel.id = "panel"; panel.hidden = true; panel.setAttribute("aria-labelledby", "p-title");
     panel.innerHTML = '<div class="panel-in" role="dialog" aria-modal="true"><h2 id="p-title">' + cfg.title + "</h2>" + cfg.about +
       '<h3>Level</h3><p>On Auto the game gets harder after two smooth boards and easier when your child needs it.</p><div class="seg" role="group" aria-label="Level"><button type="button" data-lv="easy">Easier</button><button type="button" data-lv="auto">Auto</button><button type="button" data-lv="hard">Harder</button></div>' +
@@ -56,8 +56,8 @@
       else if (b.id === "snd") { soundOn = !soundOn; store("sound", soundOn ? "on" : "off"); if (soundOn) sfx.yes(0); }
       else if (b.id === "close") { close(); return; } sync(); });
     var gate = $(".gate"), holdT = null;
-    function open() { sync(); panel.hidden = false; $("#close", panel).focus(); }
-    function close() { panel.hidden = true; gate.focus(); }
+    function open() { sync(); panel.hidden = false; behind(true); $("#close", panel).focus(); }
+    function close() { panel.hidden = true; behind(false); gate.focus(); }
     gate.addEventListener("pointerdown", function () { gate.classList.add("holding"); holdT = setTimeout(function () { gate.classList.remove("holding"); open(); }, reduce ? 600 : 2000); });
     ["pointerup", "pointerleave", "pointercancel"].forEach(function (ev) { gate.addEventListener(ev, function () { clearTimeout(holdT); gate.classList.remove("holding"); }); });
     gate.addEventListener("click", function (e) { if (e.detail === 0) open(); });   // keyboard and screen readers open at once
@@ -66,6 +66,19 @@
     document.addEventListener("pointerdown", function () { resetIdle(); }, true);
     document.addEventListener("keydown", function () { resetIdle(); }, true);
   }
+  // a choice counts only when a finger (or the main mouse button) goes down and lifts on the same element. Each finger is
+  // followed on its own, so a palm resting on the screen does not block the finger that taps; a swipe from one card to
+  // another, or a right click, is not a choice. Keyboard: click with detail 0.
+  function tap(root, sel, fn) {
+    var down = {};
+    root.addEventListener("pointerdown", function (e) { if (e.pointerType === "mouse" && e.button !== 0) return; down[e.pointerId] = e.target.closest(sel); });
+    root.addEventListener("pointercancel", function (e) { delete down[e.pointerId]; });
+    root.addEventListener("pointerup", function (e) { var d = down[e.pointerId]; delete down[e.pointerId]; if (!d) return;
+      var at = document.elementFromPoint(e.clientX, e.clientY); if (at && at.closest(sel) === d) fn(d); });
+    root.addEventListener("click", function (e) { var el = e.target.closest(sel); if (el && e.detail === 0) fn(el); });
+  }
+  // while a window is open, everything behind it is inert, so Tab and screen readers stay inside it
+  function behind(on) { var s = $(".stage"); if (s) s.inert = on; }
   function drawStars() { var h = "", i; for (i = 0; i < 5; i++) h += "<span" + (i === stars - 1 ? ' class="new"' : "") + ">" + A.icon(i < stars ? "star" : "starOff") + "</span>";
     var s = $(".stars"); s.innerHTML = h; s.setAttribute("aria-label", "Stars: " + stars + " of 5"); setTimeout(function () { var n = $(".stars .new"); if (n) n.classList.remove("new"); }, 500); }
 
@@ -90,15 +103,16 @@
   function field(n) { var f = FIELDS[n % 5], s = document.documentElement.style, h = document.getElementById("hills"); s.setProperty("--field", f[0]); s.setProperty("--tint", f[1]); s.setProperty("--field-d", f[2]);
     if (h) h.innerHTML = '<svg viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true" fill="currentColor"><path d="' + HILLS[n % 5] + '"/></svg>'; }
   function star() { stars++; drawStars(); sfx.star(); return stars; }
-  function finish() { hideHand(); clearTimeout(idleT); var e = $("#ending"), i, h = "", cols = ["yellow", "pink", "blue", "white"];
+  function finish() { hideHand(); clearTimeout(idleT); var e = $("#ending"), i, h = "", cols = ["yellow", "pink", "blue", "white"], pn = $("#panel");
+    if (pn && !pn.hidden) pn.hidden = true;   // the grown-ups panel never stays open under the ending card
     [].forEach.call(e.querySelectorAll(".confetti"), function (c) { c.remove(); });
     for (i = 0; i < 14; i++) { var c = el("div", "confetti", A.thing("star", cols[i % 4])), a = i / 14 * Math.PI * 2, d = 180 + Math.random() * 160;
       c.style.setProperty("--dx", Math.cos(a) * d + "px"); c.style.setProperty("--dy", Math.sin(a) * d * 0.8 + "px"); c.style.animationDelay = (Math.random() * 0.25) + "s"; e.appendChild(c); }
-    document.body.classList.add("done"); e.hidden = false; sfx.tune(); $("#again").focus(); }
+    document.body.classList.add("done"); e.hidden = false; behind(true); sfx.tune(); $("#again").focus(); }
 
   g.KP = {
     init: function (c) { cfg = c; build(); resetIdle(); cfg.onStart(); },
-    sfx: sfx, field: field, star: star, finish: finish, hand: hand, hideHand: hideHand, kido: kido, sparkle: sparkle, fly: fly, el: el, reduce: reduce,
+    sfx: sfx, tap: tap, field: field, star: star, finish: finish, hand: hand, hideHand: hideHand, kido: kido, sparkle: sparkle, fly: fly, el: el, reduce: reduce,
     level: function () { return level; }, stars: function () { return stars; }, soundOn: function () { return soundOn; },
     say: function () { /* slot for recorded Kido lines; silent by design (wordless games, decided 12 Nov 2026) */ }
   };

@@ -10,7 +10,7 @@
   var LV = [{ n: 6, cols: 3, kinds: 3, colors: ["red", "blue", "yellow", "green"], nc: 3 }, { n: 9, cols: 3, kinds: 4, colors: ["red", "blue", "yellow", "green"], nc: 4 },
     { n: 12, cols: 4, kinds: 5, colors: ["red", "blue", "yellow", "green", "orange", "purple"], nc: 5 }];
   var MOVES = ["hop", "wig", "dance", "hop"];
-  var lv = 0, smooth = 0, boardNo = 0, tiles = [], mode = "color", target = {}, want = [], got = 0, misses = 0, boardMisses = 0, busy = false, firstBoard = true, flipped = false, order = [0, 1, 2, 3, 4];
+  var lv = 0, smooth = 0, boardNo = 0, tiles = [], mode = "color", target = {}, want = [], got = 0, misses = 0, boardMisses = 0, busy = false, firstBoard = true, flipped = false, order = [0, 1, 2, 3, 4], started = false;   // started: on Auto, Play again keeps the level reached in this visit
   var board = $("board"), basket = $("basket"), toggle = $("toggle"), bubbles = [$("rule")], live = $("live");
 
   function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
@@ -24,7 +24,11 @@
       tc = cols.filter(function (x) { var n = count("color", x); return n >= 2 && n <= 4; }); tk = kinds.filter(function (x) { var n = count("kind", x); return n >= 2 && n <= 4; });
       ok = tc.length && tk.length; if (ok) { target = { color: tc[0], kind: tk[0] }; return; }
     }
-    target = { color: tiles[0].color, kind: tiles[0].kind };
+    // fallback (rare): never leave a short board. Build a full one from every kind x colour pair, then pick the targets
+    // whose count comes closest to 2-4 matches.
+    if (tiles.length < L.n) { b = []; kinds.forEach(function (k) { cols.forEach(function (c) { b.push({ kind: k, color: c }); }); }); tiles = shuffle(b).slice(0, L.n); }
+    function best(key, list) { return list.slice().sort(function (x, y) { var a = count(key, x), z = count(key, y), da = a < 2 ? 2 - a : a > 4 ? a - 4 : 0, dz = z < 2 ? 2 - z : z > 4 ? z - 4 : 0; return da - dz; })[0]; }
+    target = { color: best("color", cols), kind: best("kind", kinds) };
   }
   function layout() {
     // try every sensible column count and keep the one that gives the biggest cards
@@ -41,14 +45,17 @@
     board.innerHTML = h; layout();
   }
   function setField() { KP.field(boardNo); }
-  function startRound() {
-    busy = false; got = 0; misses = 0; want = tiles.filter(fits);
-    [].forEach.call(board.children, function (c) { c.classList.remove("gone", "glow"); c.disabled = false; });
+  // kept: tiles already in the basket that also fit the rule (after a switch); a new board starts with none
+  function startRound(kept) {
+    kept = kept || []; busy = false; got = kept.length; misses = 0; want = tiles.filter(fits);
+    [].forEach.call(board.children, function (c, i) { c.classList.remove("glow"); if (kept.indexOf(i) < 0) { c.classList.remove("gone"); c.disabled = false; } });
     var rule = mode === "color" ? A.splat(target.color) : A.silhouette(target.kind);
     bubbles.forEach(function (b) { b.innerHTML = rule; b.classList.remove("pulse"); void b.offsetWidth; b.classList.add("pulse"); });
-    var s = ""; want.forEach(function () { s += '<span class="slot"></span>'; }); basket.innerHTML = s; basket.setAttribute("aria-label", "Basket: 0 of " + want.length);
+    var s = ""; want.forEach(function (w, j) { s += j < got ? '<span class="slot full">' + A.thing(tiles[kept[j]].kind, tiles[kept[j]].color) + "</span>" : '<span class="slot"></span>'; });
+    basket.innerHTML = s; basket.setAttribute("aria-label", "Basket: " + got + " of " + want.length);
     toggle.setAttribute("aria-checked", String(mode === "kind"));
-    live.textContent = mode === "color" ? "Find everything " + target.color + ". " + want.length + " to find." : "Find every " + target.kind + ", in any color. " + want.length + " to find.";
+    live.textContent = mode === "color" ? "Find everything " + target.color + ". " + (want.length - got) + " to find." : "Find every " + target.kind + ", in any color. " + (want.length - got) + " to find.";
+    if (got && got === want.length) { busy = true; roundDone(); }
   }
   function hint() { if (busy) return; var i, c; for (i = 0; i < tiles.length; i++) { c = board.children[i]; if (fits(tiles[i]) && !c.classList.contains("gone")) { KP.hand(c); return; } } }
   // a short, rare invitation: the toggle wiggles once after the second and fourth star if the child has never used it
@@ -73,12 +80,13 @@
       if (n >= 5) { setTimeout(KP.finish, 900); return; } boardNo++; setTimeout(newBoard, 1100); }, 600);
   }
   // the child's own choice, at any moment: same board, the other way of looking at it
-  function flip() { if (busy) return; flipped = true; toggle.classList.remove("nudge"); KP.hideHand(); KP.sfx.swap(); mode = mode === "color" ? "kind" : "color"; startRound(); }
+  function flip() { if (busy) return; flipped = true; toggle.classList.remove("nudge"); KP.hideHand(); KP.sfx.swap(); mode = mode === "color" ? "kind" : "color";
+    // keep in the basket what fits the new rule too; only the rest goes back to the board (Sivan, 15 Nov)
+    var kept = []; [].forEach.call(board.children, function (c, i) { if (c.classList.contains("gone") && fits(tiles[i])) kept.push(i); });
+    startRound(kept); }
 
-  board.addEventListener("pointerdown", function (e) { var c = e.target.closest(".card"); if (c) { e.preventDefault(); pick(c); } });
-  board.addEventListener("click", function (e) { var c = e.target.closest(".card"); if (c && e.detail === 0) pick(c); });
-  toggle.addEventListener("pointerdown", function (e) { e.preventDefault(); flip(); });
-  toggle.addEventListener("click", function (e) { if (e.detail === 0) flip(); });
+  KP.tap(board, ".card", pick);      // a choice counts only when the finger lifts on the same card it touched
+  KP.tap(toggle, ".toggle", flip);
   $("kido").addEventListener("click", function () { KP.kido("hop"); hint(); });
   addEventListener("resize", layout);
   toggle.innerHTML = "<i>" + A.icon("palette") + "</i><i>" + A.icon("things") + "</i>";
@@ -86,7 +94,7 @@
   KP.init({
     title: "For grown-ups: Kido's Treasure Hunt",
     about: "<p>Your child finds every picture that fits the rule in Kido's bubble, and the rule changes with every board. The switch at the top is your child's own choice: it turns the game from <b>by color</b> to <b>by kind of thing</b> and back, at any moment, on the same pictures. Looking at one thing in two ways is <b>flexible thinking</b>, a core executive-function skill that supports learning at school. Searching a busy board builds <b>focused attention</b>, and the basket invites <b>counting</b>.</p><h3>Play it at home</h3><p>\"I spy three blue things.\" Then switch: \"Now three things with wheels.\" Take turns choosing the rule.</p>",
-    onStart: function () { boardNo = 0; firstBoard = true; flipped = false; mode = "color"; smooth = 0; lv = KP.level() === "hard" ? 2 : 0; order = shuffle([0, 1, 2, 3, 4]); newBoard(); },
+    onStart: function () { boardNo = 0; firstBoard = true; flipped = false; mode = "color"; if (KP.level() === "hard") lv = 2; else if (KP.level() === "easy" || !started) { lv = 0; smooth = 0; } started = true; order = shuffle([0, 1, 2, 3, 4]); newBoard(); },
     onLevel: function (l) { lv = l === "hard" ? 2 : l === "easy" ? 0 : lv; },
     onIdle: hint,
     practice: "Today: looking closely, and seeing the same things in two ways (by color, by kind)."

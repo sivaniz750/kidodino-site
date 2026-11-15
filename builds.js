@@ -3,7 +3,10 @@
    Every open place is always drawn on top of what is already built, so nothing waiting can hide. There is no silhouette level
    and no "tap, then tap a place". Difficulty never changes how you play: it only adds pieces and makes the shapes in the tray
    more alike (level 1: different kinds of shape; level 2: same kind, other size or direction; level 3: four to choose from).
-   Every shape in the tray has a place in this picture. Based on the shape-composition trajectory of Clements & Sarama. */
+   The tray always offers 3 shapes (4 on level 3), never two that look alike. First come shapes still missing from this picture; if those
+   run out, shapes already placed in it; only if still short, shapes from other pictures that look like nothing in this one.
+   Choosing any of these extras is an ordinary miss (wobble, soft sound). (Sivan, 15 Nov.) Based on the shape-composition
+   trajectory of Clements & Sarama. */
 (function () {
   "use strict";
   var A = KDArt, $ = function (id) { return document.getElementById(id); };
@@ -20,7 +23,7 @@
     { name: "fish", move: "bob", p: [["tri", 116, 48, 62, 84, "yellow", "left"], ["half", 52, 28, 60, 34, "yellow", "up"], ["oval", 22, 48, 114, 84, "orange"], ["circle", 42, 70, 20, 20, "blue"], ["tri", 76, 88, 30, 26, "yellow", "right"]] },
     { name: "ice cream", move: "jump", p: [["tri", 64, 90, 72, 66, "orange", "down"], ["circle", 52, 46, 54, 54, "red"], ["circle", 94, 46, 54, 54, "yellow"], ["circle", 73, 14, 54, 54, "blue"]] }
   ];
-  var order = [], n = 0, lv = 0, smooth = 0, pic, step = 0, filled = [], misses = 0, picMisses = 0, busy = false, first = true, opts = [];
+  var order = [], n = 0, lv = 0, smooth = 0, pic, step = 0, filled = [], misses = 0, picMisses = 0, busy = false, first = true, opts = [], started = false;   // started: on Auto, Play again keeps the level reached in this visit
   var svg = $("canvas"), tray = $("tray"), live = $("live");
   var NAMES = { tri: "triangle", half: "half circle", rect: "rectangle", square: "square", circle: "circle", oval: "oval" };
 
@@ -35,6 +38,9 @@
   function drawn(p) { return A.B(p[5], shape(p)).replace('stroke-width="13"', 'stroke-width="7"') + A.H(p[1] + p[3] * 0.3, p[2] + p[4] * (p[0] === "tri" && p[6] !== "down" ? 0.62 : 0.26), Math.max(3, p[3] * 0.09), Math.max(2, p[4] * 0.05), -25); }
   function tile(p) { // the piece alone, fitted in a 120 box, for the tray and for flying
     var s = 96 / Math.max(p[3], p[4]), w = p[3] * s, h = p[4] * s, q = p.slice(); q[1] = 60 - w / 2; q[2] = 60 - h / 2; q[3] = w; q[4] = h; return A.svg(drawn(q)); }
+  // how a piece looks in the tray: every tile is scaled to the same box, so size does not show, only kind, direction and
+  // proportions (a square looks like a rect, a circle like an oval). Two tray shapes must never look alike. (review, 15 Nov)
+  function look(p) { var t = p[0] === "square" ? "rect" : p[0] === "circle" ? "oval" : p[0]; return t + (p[6] || "") + Math.round(p[3] / p[4] * 5); }
   function same(a, b) { return a[0] === b[0] && (a[6] || "") === (b[6] || "") && Math.abs(a[3] - b[3]) < 6 && Math.abs(a[4] - b[4]) < 6; }
   function render() {
     // built pieces first, then the glowing place, then the dashed outlines of every other open place on top, so no waiting place is ever covered
@@ -46,12 +52,18 @@
     [].forEach.call(svg.querySelectorAll(".old"), function (g) { g.style.animation = "none"; });
   }
   function fillTray() {
-    var need = pic.p[step], rest = [], size = lv === 2 ? 4 : 3, h = "";
-    pic.p.forEach(function (p, i) { if (!filled[i] && i !== step && !same(p, need) && !rest.some(function (r) { return same(r, p); })) rest.push(p); });
-    shuffle(rest);
+    var need = pic.p[step], size = lv === 2 ? 4 : 3, h = "", picked = [];
+    function fresh(p) { return look(p) !== look(need) && !picked.some(function (r) { return look(r) === look(p); }); }
     // level 1 prefers other kinds of shape; levels 2 and 3 prefer the same kind in another size or direction
-    rest.sort(function (a, b) { var x = a[0] === need[0] ? 1 : 0, y = b[0] === need[0] ? 1 : 0; return lv === 0 ? x - y : y - x; });
-    opts = shuffle([need].concat(rest.slice(0, size - 1)));
+    function pref(a, b) { var x = a[0] === need[0] ? 1 : 0, y = b[0] === need[0] ? 1 : 0; return lv === 0 ? x - y : y - x; }
+    function take(list) { shuffle(list).sort(pref).forEach(function (p) { if (picked.length < size - 1 && fresh(p)) picked.push(p); }); }
+    take(pic.p.filter(function (p, i) { return !filled[i] && i !== step; }));          // 1. still missing from this picture
+    take(pic.p.filter(function (p, i) { return filled[i]; }));                          // 2. already placed in this picture
+    if (picked.length < size - 1) {                                                     // 3. from other pictures, unlike anything here
+      var other = []; PICS.forEach(function (q) { if (q !== pic) q.p.forEach(function (p) { if (!pic.p.some(function (r) { return same(r, p); })) other.push(p); }); });
+      take(other);
+    }
+    opts = shuffle([need].concat(picked));
     opts.forEach(function (o, k) { h += '<button type="button" style="animation-delay:' + k * 60 + 'ms" data-k="' + k + '" aria-label="' + o[5] + " " + NAMES[o[0]] + '">' + tile(o) + "</button>"; });
     tray.innerHTML = h; live.textContent = "Building a " + pic.name + ". Which shape fits the glowing place?";
   }
@@ -74,14 +86,13 @@
   }
   function next() { pic = PICS[order[n % order.length]]; step = 0; filled = []; misses = 0; picMisses = 0; busy = false; KP.field(n + 3); render(); fillTray(); }
 
-  tray.addEventListener("pointerdown", function (e) { var b = e.target.closest("button"); if (b) { e.preventDefault(); pickTray(b); } });
-  tray.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b && e.detail === 0) pickTray(b); });
+  KP.tap(tray, "button", pickTray);   // a choice counts only when the finger lifts on the same shape it touched
   $("kido").addEventListener("click", function () { KP.kido("hop"); hint(); });
 
   KP.init({
     title: "For grown-ups: Kido Builds",
     about: "<p>Your child builds a picture out of simple shapes. One place in the picture glows, and your child chooses the shape that belongs there. As the game goes on there are more pieces, and the shapes to choose from look more alike: a big and a small triangle, a tall and a wide rectangle. Seeing how small shapes make a bigger one is <b>spatial thinking</b>, one of the strongest early foundations for math.</p><h3>Play it at home</h3><p>Cut a circle, a square and a few triangles from paper. What can you build together? Name the shapes as you go.</p>",
-    onStart: function () { n = 0; first = true; smooth = 0; lv = KP.level() === "hard" ? 2 : 0; order = shuffle([0, 1, 2, 3, 4, 5, 6, 7]); next(); },
+    onStart: function () { n = 0; first = true; if (KP.level() === "hard") lv = 2; else if (KP.level() === "easy" || !started) { lv = 0; smooth = 0; } started = true; order = shuffle([0, 1, 2, 3, 4, 5, 6, 7]); next(); },
     onLevel: function (l) { if (l !== "auto") { lv = l === "hard" ? 2 : 0; if (pic && !busy) fillTray(); } },
     onIdle: hint,
     practice: "Today: putting shapes together to make a bigger picture, an early building block of math."

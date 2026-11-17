@@ -30,7 +30,7 @@
     var stage = $(".stage"), band = el("header", "band");
     band.innerHTML = '<a class="round home" href="./#games" aria-label="Back to all games">' + A.icon("home") + '</a>' +
       '<div class="stars" role="img" aria-label="Stars: 0 of 5"></div>' +
-      '<button class="gate" type="button"><span class="gate-long">For grown-ups</span><span class="gate-short" aria-hidden="true">Grown-ups</span></button>';
+      '<button class="gate" type="button" aria-label="For grown-ups"><span class="gate-long">For grown-ups</span><span class="gate-short" aria-hidden="true">Grown-ups</span></button>';
     stage.insertBefore(band, stage.firstChild);
     // a short, visible line for the grown-up who plays along (Sivan, 17 Nov 2026): never inside the play area, never in the way
     if (cfg.howto) { var how = el("footer", "howto"); how.innerHTML = "<p><b>How to play:</b> <span class=\"h-long\">" + cfg.howto + "</span><span class=\"h-short\">" + (cfg.howtoShort || cfg.howto) + "</span></p>"; stage.appendChild(how);

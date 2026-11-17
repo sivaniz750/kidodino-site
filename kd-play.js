@@ -30,8 +30,12 @@
     var stage = $(".stage"), band = el("header", "band");
     band.innerHTML = '<a class="round home" href="./#games" aria-label="Back to all games">' + A.icon("home") + '</a>' +
       '<div class="stars" role="img" aria-label="Stars: 0 of 5"></div>' +
-      '<button class="round gate" type="button" aria-label="For grown-ups: press and hold for two seconds">' + A.icon("grownups") + '<svg class="ring" viewBox="0 0 74 74" aria-hidden="true"><circle cx="37" cy="37" r="34" pathLength="214"/></svg></button>';
+      '<button class="gate" type="button"><span class="gate-long">For grown-ups</span><span class="gate-short" aria-hidden="true">Grown-ups</span></button>';
     stage.insertBefore(band, stage.firstChild);
+    // a short, visible line for the grown-up who plays along (Sivan, 17 Nov 2026): never inside the play area, never in the way
+    if (cfg.howto) { var how = el("footer", "howto"); how.innerHTML = "<p><b>How to play:</b> <span class=\"h-long\">" + cfg.howto + "</span><span class=\"h-short\">" + (cfg.howtoShort || cfg.howto) + "</span></p>"; stage.appendChild(how);
+      var fit = function () { stage.style.setProperty("--howto-h", how.offsetHeight + "px"); }; fit();
+      if (g.ResizeObserver) new ResizeObserver(fit).observe(how); else g.addEventListener("resize", fit); }
     drawStars();
     // no opening screen: the board is ready and the first touch is the first move (sound wakes up on that touch)
     var end = el("div", "ending"); end.id = "ending"; end.hidden = true;
@@ -55,12 +59,10 @@
       if (b.dataset.lv) { level = b.dataset.lv; store("level", level); if (cfg.onLevel) cfg.onLevel(level); }
       else if (b.id === "snd") { soundOn = !soundOn; store("sound", soundOn ? "on" : "off"); if (soundOn) sfx.yes(0); }
       else if (b.id === "close") { close(); return; } sync(); });
-    var gate = $(".gate"), holdT = null;
+    var gate = $(".gate");
     function open() { sync(); panel.hidden = false; behind(true); $("#close", panel).focus(); }
     function close() { panel.hidden = true; behind(false); gate.focus(); }
-    gate.addEventListener("pointerdown", function () { gate.classList.add("holding"); holdT = setTimeout(function () { gate.classList.remove("holding"); open(); }, reduce ? 600 : 2000); });
-    ["pointerup", "pointerleave", "pointercancel"].forEach(function (ev) { gate.addEventListener(ev, function () { clearTimeout(holdT); gate.classList.remove("holding"); }); });
-    gate.addEventListener("click", function (e) { if (e.detail === 0) open(); });   // keyboard and screen readers open at once
+    gate.addEventListener("click", open);   // one tap (Sivan, 17 Nov 2026): the panel holds only information and two settings, nothing a child can break
     gate.addEventListener("contextmenu", function (e) { e.preventDefault(); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !panel.hidden) close(); });
     document.addEventListener("pointerdown", function () { resetIdle(); }, true);

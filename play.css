@@ -15,7 +15,7 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .kd-sil * { fill: var(--ink) !important; stroke: var(--ink) !important; opacity: 1 !important; }
 
-.stage { position: fixed; inset: 0; display: grid; grid-template-rows: var(--band) 1fr; background-color: var(--field); transition: background-color .6s; }
+.stage { position: fixed; inset: 0; display: grid; grid-template-rows: var(--band) minmax(0, 1fr) auto; background-color: var(--field); transition: background-color .6s; }
 .stage::before { content: ""; position: absolute; inset: 0; background: var(--tint); pointer-events: none; transition: background-color .6s;
   -webkit-mask: var(--stars) 0 0 / 240px 240px; mask: var(--stars) 0 0 / 240px 240px; }
 
@@ -26,9 +26,12 @@ svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .round { width: 60px; height: 60px; flex: none; border-radius: 50%; background: var(--paper); border: var(--outline); display: grid; place-items: center; position: relative; transition: transform .12s; }
 .round svg { width: 36px; height: 36px; }
 .round:active { transform: scale(.94); }
-.gate .ring { position: absolute; inset: -9px; width: 72px; height: 72px; transform: rotate(-90deg); pointer-events: none; }
-.gate .ring circle { fill: none; stroke: var(--sun); stroke-width: 6; stroke-dasharray: 214; stroke-dashoffset: 214; }
-.gate.holding .ring circle { transition: stroke-dashoffset 2s linear; stroke-dashoffset: 0; }
+/* the grown-ups button is for adults, so it looks like a quiet adult button, not a child's round icon (Sivan, 17 Nov 2026) */
+.gate { flex: none; min-height: 44px; padding: 0 var(--s4); border: 2px solid rgb(255 255 255 / .75); border-radius: var(--r-pill); color: #fff; font-weight: 600; font-size: 16px; line-height: 1; transition: background-color .15s; }
+.gate:active { background: rgb(255 255 255 / .16); }
+@media (hover: hover) { .gate:hover { background: rgb(255 255 255 / .12); } }
+.gate:focus-visible { outline-color: #fff; }
+.gate-short { display: none; }
 .stars { display: flex; gap: var(--s1); align-items: center; }
 .stars span { width: 38px; height: 38px; display: block; transition: transform .4s var(--ease); }
 .stars span.new { transform: scale(1.5) rotate(-12deg); }
@@ -41,6 +44,18 @@ svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .toggle[aria-checked="true"]::before { transform: translateX(calc(100% + 4px)); }
 .toggle[aria-checked="false"] i:last-child, .toggle[aria-checked="true"] i:first-child { opacity: .45; filter: grayscale(1); }
 .toggle.nudge { animation: call .9s 2; }
+
+/* How to play: one line for the grown-up under a light rule, left-aligned with Kido. The field (and its hills) runs on
+   under it to the bottom of the screen, so the background is never cut (Sivan, 17 Nov 2026) */
+@media (orientation: landscape) { .stage:has(> .howto) .field { grid-template-rows: minmax(0, 1fr); } }
+/* the howto has its own grid row, so the game shrinks to fit it; the hills reach under it to the bottom of the screen */
+.stage:has(> .howto) .hills { bottom: calc(-1 * var(--howto-h, 0px)); }
+.howto { position: relative; z-index: 2; pointer-events: none;
+  padding: 0 max(var(--s6), env(safe-area-inset-right, 0px)) max(var(--s5), env(safe-area-inset-bottom, 0px)) max(var(--s6), env(safe-area-inset-left, 0px)); }
+.howto p { margin: 0; padding-top: var(--s4); text-wrap: balance; border-top: 1px solid rgb(43 45 92 / .18); text-align: center; font-size: 15px; line-height: 1.55; color: var(--ink); pointer-events: auto; user-select: text; -webkit-user-select: text; }
+.howto b { font-weight: 700; color: var(--grape-deep); margin-right: .25em; }
+.howto .h-short { display: none; }
+@media (max-width: 440px), (orientation: landscape) and (max-height: 520px) { .howto .h-long { display: none; } .howto .h-short { display: inline; } }
 
 /* field: three columns – Kido · game · tools */
 .field { position: relative; z-index: 1; min-height: 0; display: grid; grid-template-columns: var(--kido-w) minmax(0, 1fr) auto; align-items: center;
@@ -102,7 +117,8 @@ svg { display: block; width: 100%; height: 100%; overflow: visible; }
   background: var(--paper); border: var(--outline); border-radius: var(--r-md); box-shadow: var(--shadow); padding: 3%; }
 .page svg { overflow: visible; }
 .gap { fill: rgb(255 253 246 / .3); stroke: var(--ink); stroke-width: 3; stroke-dasharray: 9 7; stroke-linejoin: round; stroke-linecap: round; }
-.gap.now { fill: #FFE08A; stroke-width: 3.5; animation: gapnow 1s infinite; }
+/* the place to fill pulses with no colour of its own: yellow is also a shape colour and would hint at the wrong piece (Sivan, 17 Nov 2026) */
+.gap.now { fill: #F3F0FA; animation: gapnow 1s infinite; }   /* soft greys mixed from --grape (7% / 20% on white), never a shape colour */
 .piece { animation: pop .35s; transform-box: fill-box; transform-origin: center; }
 .alive.drive { animation: drive 2.2s ease-in-out; } .alive.launch { animation: launch 2.2s ease-in; } .alive.bob { animation: bob 2.2s ease-in-out; } .alive.jump { animation: jump 1.6s; }
 .tray { position: relative; z-index: 1; display: grid; gap: var(--s4); justify-items: center; align-content: center; }
@@ -132,13 +148,17 @@ svg { display: block; width: 100%; height: 100%; overflow: visible; }
 /* a phone on its side */
 @media (orientation: landscape) and (max-height: 520px) {
   :root { --band: 62px; --kido-w: 96px; }
-  .round { width: 48px; height: 48px; } .round svg { width: 30px; height: 30px; } .gate .ring { width: 60px; height: 60px; }
+  .round { width: 48px; height: 48px; } .round svg { width: 30px; height: 30px; } .gate { min-height: 40px; font-size: 14px; padding: 0 var(--s3); }
+  .howto { padding-left: max(var(--s5), env(safe-area-inset-left, 0px)); padding-right: max(var(--s5), env(safe-area-inset-right, 0px)); padding-bottom: max(var(--s2), env(safe-area-inset-bottom, 0px)); }
+  .howto p { font-size: 13px; line-height: 1.4; padding-top: 6px; }
   .stars span { width: 28px; height: 28px; } .toggle i { width: 52px; height: 40px; } .toggle i svg { width: 30px; height: 30px; }
   .field { padding: var(--s2) var(--s5) var(--s3); gap: var(--s4); }
   .rule { width: 84px; padding: var(--s3); } .slot { width: 34px; height: 34px; } .basket { grid-template-columns: repeat(2, 34px); padding: 10px; }
+  .goal { gap: var(--s3); } .goal .toggle { margin-bottom: var(--s3); }
   .tray { gap: var(--s2); } .tray button { width: 68px; }
 }
-@media (max-width: 440px) { .stars span { width: 24px; height: 24px; } .stars { gap: 2px; } .round { width: 48px; height: 48px; } .round svg { width: 30px; height: 30px; } .gate .ring { width: 60px; height: 60px; } .toggle i { width: 46px; height: 40px; } .toggle i svg { width: 28px; height: 28px; } .band-mid { gap: var(--s2); } }
+@media (max-width: 440px) { .stars span { width: 24px; height: 24px; } .stars { gap: 2px; } .round { width: 48px; height: 48px; } .round svg { width: 30px; height: 30px; } .gate { min-height: 40px; font-size: 14px; padding: 0 var(--s3); }
+  .toggle i { width: 46px; height: 40px; } .toggle i svg { width: 28px; height: 28px; } .band-mid { gap: var(--s2); } }
 
 @keyframes pulse { 50% { transform: scale(1.06); } }
 @keyframes hop { 30% { transform: translateY(-9%) scale(1.03, .97); } 60% { transform: translateY(0) scale(.97, 1.03); } }
@@ -148,13 +168,13 @@ svg { display: block; width: 100%; height: 100%; overflow: visible; }
 @keyframes call { 0%, 100% { transform: rotate(0) scale(1); } 20% { transform: rotate(-5deg) scale(1.08); } 40% { transform: rotate(4deg) scale(1.08); } 60% { transform: rotate(0) scale(1); } }
 @keyframes drop { from { opacity: 0; transform: translateY(-24px) scale(.8); } }
 @keyframes wob { 20% { transform: rotate(-6deg); } 50% { transform: rotate(5deg); } 80% { transform: rotate(-3deg); } }
-@keyframes glow { 50% { box-shadow: 0 0 0 8px rgb(255 199 58 / .9); } }
+@keyframes glow { 50% { box-shadow: 0 0 0 5px rgb(96 64 176 / .28); } }   /* soft grape halo (Sivan, 17 Nov 2026) */
 @keyframes pop { from { transform: scale(.9); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } }
 @keyframes spark { from { transform: scale(.3) rotate(0); opacity: 1; } to { transform: scale(1.5) rotate(50deg); opacity: 0; } }
 @keyframes point { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(12px); } }
 @keyframes rise { from { opacity: 0; transform: translateY(30px) scale(.92); } }
 @keyframes burst { from { transform: translate(0, 0) scale(.3); opacity: 0; } 20% { opacity: 1; } to { transform: translate(var(--dx), var(--dy)) scale(1) rotate(200deg); opacity: 0; } }
-@keyframes gapnow { 50% { fill: #FFC73A; } }
+@keyframes gapnow { 50% { fill: #DFD9EF; } }
 @keyframes drive { 35% { transform: translateX(120%); } 36% { transform: translateX(-120%); } 100% { transform: none; } }
 @keyframes launch { 45% { transform: translateY(-130%); } 46% { transform: translateY(130%); } 100% { transform: none; } }
 @keyframes bob { 20% { transform: translate(6%, -4%) rotate(4deg); } 50% { transform: translate(-6%, 2%) rotate(-4deg); } 80% { transform: translate(4%, -3%) rotate(3deg); } }
@@ -222,3 +242,7 @@ body.done #brush { opacity: 0; }
   .ref { width: 96px; } .jar { width: 48px; } .palette { width: 170px; } .table { padding: var(--s1) var(--s3); }
 }
 @media (hover: none) { .field.mix, .mix button, .mix .palette, .mix .area { cursor: auto; } }
+/* narrow phones: the short label keeps the band from crowding */
+@media (max-width: 420px) { .gate-long { display: none; } .gate-short { display: inline; } .gate { padding: 0 var(--s3); font-size: 15px; } .howto p { font-size: 13.5px; } }
+@media (orientation: portrait) { .howto { padding-left: max(var(--s4), env(safe-area-inset-left, 0px)); padding-right: max(var(--s4), env(safe-area-inset-right, 0px)); } }
+@media (orientation: landscape) and (max-height: 380px) { .rule { width: 72px; padding: var(--s2); } }

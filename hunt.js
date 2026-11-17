@@ -93,7 +93,9 @@
 
   KP.init({
     title: "For grown-ups: Kido's Treasure Hunt",
-    about: "<p>Your child finds every picture that fits the rule in Kido's bubble, and the rule changes with every board. The switch at the top is your child's own choice: it turns the game from <b>by color</b> to <b>by kind of thing</b> and back, at any moment, on the same pictures. Looking at one thing in two ways is <b>flexible thinking</b>, a core executive-function skill that supports learning at school. Searching a busy board builds <b>focused attention</b>, and the basket invites <b>counting</b>.</p><h3>Play it at home</h3><p>\"I spy three blue things.\" Then switch: \"Now three things with wheels.\" Take turns choosing the rule.</p>",
+    howto: "Help Kido find everything that matches his bubble and fill the basket. Flip the switch to play by color or by shape. Need a hint? Look for the glowing frame.",
+    howtoShort: "Help Kido find everything that matches his bubble. Flip the switch to play by color or by shape.",
+    about: "<p>Your child finds every picture that fits the rule in Kido's bubble, and the rule changes with every board. The switch at the top is your child's own choice: it turns the game from <b>by color</b> to <b>by shape</b> and back, at any moment, on the same pictures. Looking at one thing in two ways is <b>flexible thinking</b>, a core executive-function skill that supports learning at school. Searching a busy board builds <b>focused attention</b>, and the basket invites <b>counting</b>.</p><h3>Play it at home</h3><p>\"I spy three blue things.\" Then switch: \"Now three things with wheels.\" Take turns choosing the rule.</p>",
     onStart: function () { boardNo = 0; firstBoard = true; flipped = false; mode = "color"; if (KP.level() === "hard") lv = 2; else if (KP.level() === "easy" || !started) { lv = 0; smooth = 0; } started = true; order = shuffle([0, 1, 2, 3, 4]); newBoard(); },
     onLevel: function (l) { lv = l === "hard" ? 2 : l === "easy" ? 0 : lv; },
     onIdle: hint,

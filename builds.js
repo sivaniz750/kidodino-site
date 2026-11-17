@@ -91,6 +91,8 @@
 
   KP.init({
     title: "For grown-ups: Kido Builds",
+    howto: "Help Kido build! Tap the shape that fits the blinking spot, and watch the picture come alive.",
+    howtoShort: "Help Kido build! Tap the shape that fits the blinking spot.",
     about: "<p>Your child builds a picture out of simple shapes. One place in the picture glows, and your child chooses the shape that belongs there. As the game goes on there are more pieces, and the shapes to choose from look more alike: a big and a small triangle, a tall and a wide rectangle. Seeing how small shapes make a bigger one is <b>spatial thinking</b>, one of the strongest early foundations for math.</p><h3>Play it at home</h3><p>Cut a circle, a square and a few triangles from paper. What can you build together? Name the shapes as you go.</p>",
     onStart: function () { n = 0; first = true; if (KP.level() === "hard") lv = 2; else if (KP.level() === "easy" || !started) { lv = 0; smooth = 0; } started = true; order = shuffle([0, 1, 2, 3, 4, 5, 6, 7]); next(); },
     onLevel: function (l) { if (l !== "auto") { lv = l === "hard" ? 2 : 0; if (pic && !busy) fillTray(); } },

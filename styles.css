@@ -9,6 +9,10 @@ body { margin: 0; background: var(--paper, #FFFDF6); color: var(--ink, #2B2D5C);
 img, svg { max-width: 100%; display: block; }
 h1, h2, h3, p { margin: 0; }
 h1, h2, h3 { text-wrap: balance; }
+/* site typography (Sivan, 17 Nov 2026; website only, not the books): no single word left alone on a last line.
+   Short and centred texts are balanced into even lines; running paragraphs only avoid a lone last word. */
+p, li { text-wrap: pretty; }
+.lede, .t-small, .quiz-title, figcaption { text-wrap: balance; }
 /* line length only on running text, never on every <p> (bubbles and labels are <p> too) */
 .lede, .prose p, .hero-copy p, .about-copy p { max-width: 62ch; }
 a { color: var(--grape-deep); text-underline-offset: .18em; text-decoration-thickness: 2px; }

@@ -1,6 +1,6 @@
 /* Kido's Treasure Hunt (v5c, 12 Nov 2026). The child finds every picture that fits the rule in Kido's bubble. A full basket
    is a finished board: star, then a new board. The toggle is a separate choice that belongs to the child: it switches the
-   whole game between "by colour" and "by kind" at any moment and never stands between the child and the next star.
+   whole game between "by colour" and "by shape" at any moment and never stands between the child and the next star.
    Now and then it wiggles for a second to say "there is another way to play"; ignoring it costs nothing. (Sivan, 12 Nov.) */
 (function () {
   "use strict";
@@ -99,6 +99,6 @@
     onStart: function () { boardNo = 0; firstBoard = true; flipped = false; mode = "color"; if (KP.level() === "hard") lv = 2; else if (KP.level() === "easy" || !started) { lv = 0; smooth = 0; } started = true; order = shuffle([0, 1, 2, 3, 4]); newBoard(); },
     onLevel: function (l) { lv = l === "hard" ? 2 : l === "easy" ? 0 : lv; },
     onIdle: hint,
-    practice: "Today: looking closely, and seeing the same things in two ways (by color, by kind)."
+    practice: "Today: looking closely, and seeing the same things in two ways (by color, by shape)."
   });
 })();

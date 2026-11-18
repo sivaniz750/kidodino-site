@@ -30,13 +30,37 @@
     function best(key, list) { return list.slice().sort(function (x, y) { var a = count(key, x), z = count(key, y), da = a < 2 ? 2 - a : a > 4 ? a - 4 : 0, dz = z < 2 ? 2 - z : z > 4 ? z - 4 : 0; return da - dz; })[0]; }
     target = { color: best("color", cols), kind: best("kind", kinds) };
   }
+  // Card layout – the rule (Sivan, 18 Nov 2026):
+  //  1. Never sideways: the board keeps its inner padding from the screen edges, and cards break into another row by width.
+  //  2. Everything fits the phone's screen without scrolling while there is any way to do it.
+  //  3. A card is 64px or bigger. To fit, it may shrink, but never below FLOOR (52px, about 80%).
+  //  4. Full rows first (9 cards = 3 x 3, 12 = 4 x 3) on every screen. If full rows at FLOOR size fit only when the
+  //     grown-ups' How to play line moves below the screen, that is what we do: every card stays on screen (option B).
+  //  5. Otherwise the biggest card that fits; only if nothing fits even at FLOOR does the page scroll down. Never sideways.
+  // (Israel, 17 Nov: on his iPhone the cards ran off both edges.)
+  var GOOD = 64, FLOOR = 52;
   function layout() {
-    // try every sensible column count and keep the one that gives the biggest cards
-    var L = LV[lv], r = board.getBoundingClientRect(), cs = getComputedStyle(board), gap = Math.max(8, Math.min(16, r.width * 0.02));
-    var availH = r.height - parseFloat(cs.paddingBottom) - parseFloat(cs.paddingTop) - 8, availW = r.width - 8, best = 0, bestCols = L.cols;
-    [2, 3, 4, 6].forEach(function (cols) { if (cols > L.n) return; var rows = Math.ceil(L.n / cols), t = Math.floor(Math.min((availW - gap * (cols - 1)) / cols, (availH - gap * (rows - 1)) / rows)); if (t > best) { best = t; bestCols = cols; } });
-    best = Math.max(64, Math.min(best, 190));
-    board.style.setProperty("--tile", best + "px"); board.style.setProperty("--gap", gap + "px"); board.style.gridTemplateColumns = "repeat(" + bestCols + ", " + best + "px)";
+    var L = LV[lv], stage = board.parentNode.parentNode;
+    stage.classList.remove("tall"); board.style.height = "";              // measure the room the screen really has
+    var r = board.getBoundingClientRect(), gap = r.width < 600 ? 12 : 16, availW = r.width - 8, availH = r.height - 4;
+    var availVis = innerHeight - r.top - 12;                                // down to the bottom of the screen, under the How to play line
+    var maxCols = Math.max(2, Math.min(L.n, Math.floor((availW + gap) / (FLOOR + gap)))), cand = [], cols, rows, full, ok, pick;
+    for (cols = 2; cols <= maxCols; cols++) { rows = Math.ceil(L.n / cols);
+      cand.push({ cols: cols, rows: rows, empty: rows * cols - L.n, tw: Math.floor((availW - gap * (cols - 1)) / cols),
+        th: Math.floor((availH - gap * (rows - 1)) / rows), tv: Math.floor((availVis - gap * (rows - 1)) / rows) }); }
+    cand.forEach(function (c) { c.t = Math.min(c.tw, c.th, 190); });
+    full = cand.filter(function (c) { return c.empty === 0; });
+    ok = cand.filter(function (c) { return c.t >= FLOOR; });
+    pick = full.filter(function (c) { return c.t >= FLOOR; }).sort(function (x, y) { return y.t - x.t; })[0];     // full rows, no scroll
+    if (!pick || pick.t < GOOD) {
+      var vis = full.filter(function (c) { return c.t < FLOOR && Math.min(c.tw, c.tv) >= FLOOR; }).sort(function (x, y) { return x.rows - y.rows; })[0];
+      if (!pick && vis) { pick = vis; pick.t = FLOOR; }                     // full rows at FLOOR, How to play below the screen
+    }
+    if (!pick && ok.length) pick = ok.sort(function (x, y) { return y.t - x.t || x.empty - y.empty; })[0];
+    if (!pick) { pick = cand.slice().sort(function (x, y) { return x.empty - y.empty || x.rows - y.rows; })[0]; pick.t = Math.min(FLOOR, pick.tw); }
+    board.style.setProperty("--tile", pick.t + "px"); board.style.setProperty("--gap", gap + "px"); board.style.gridTemplateColumns = "repeat(" + pick.cols + ", " + pick.t + "px)";
+    var need = pick.rows * pick.t + gap * (pick.rows - 1) + 4;
+    if (need > r.height + 1) { stage.classList.add("tall"); board.style.height = need + "px"; }
   }
   function fits(t) { return t[mode] === target[mode]; }
   function label(t) { return t.color + " " + t.kind; }
@@ -52,7 +76,7 @@
     var rule = mode === "color" ? A.splat(target.color) : A.silhouette(target.kind);
     bubbles.forEach(function (b) { b.innerHTML = rule; b.classList.remove("pulse"); void b.offsetWidth; b.classList.add("pulse"); });
     var s = ""; want.forEach(function (w, j) { s += j < got ? '<span class="slot full">' + A.thing(tiles[kept[j]].kind, tiles[kept[j]].color) + "</span>" : '<span class="slot"></span>'; });
-    basket.innerHTML = s; basket.setAttribute("aria-label", "Basket: " + got + " of " + want.length);
+    basket.innerHTML = s; basket.setAttribute("aria-label", "Basket: " + got + " of " + want.length); layout();   // the basket can grow a row, which takes room from the board
     toggle.setAttribute("aria-checked", String(mode === "kind"));
     live.textContent = mode === "color" ? "Find everything " + target.color + ". " + (want.length - got) + " to find." : "Find every " + target.kind + ", in any color. " + (want.length - got) + " to find.";
     if (got && got === want.length) { busy = true; roundDone(); }
@@ -89,6 +113,8 @@
   KP.tap(toggle, ".toggle", flip);
   $("kido").addEventListener("click", function () { KP.kido("hop"); hint(); });
   addEventListener("resize", layout);
+  // the How to play line and the phone's browser bars change the room after the first layout
+  if (window.ResizeObserver) { var seen = ""; new ResizeObserver(function () { var how = document.querySelector(".howto"), k = innerWidth + "x" + innerHeight + "x" + (how ? how.offsetHeight : 0); if (k !== seen) { seen = k; if (tiles.length) layout(); } }).observe(document.body); }
   toggle.innerHTML = "<i>" + A.icon("palette") + "</i><i>" + A.icon("things") + "</i>";
 
   KP.init({

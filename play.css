@@ -130,7 +130,7 @@ svg { display: block; width: 100%; height: 100%; overflow: visible; }
 @media (orientation: portrait) {
   :root { --kido-w: clamp(84px, 22vw, 130px); }
   .band-mid { gap: var(--s3); }
-  .field { grid-template-columns: var(--kido-w) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); align-items: start; padding: var(--s4) var(--s4) var(--s6); gap: var(--s4); }
+  .field { grid-template-columns: var(--kido-w) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); align-items: start; padding: var(--s4) max(var(--s4), env(safe-area-inset-right, 0px)) var(--s3) max(var(--s4), env(safe-area-inset-left, 0px)); gap: var(--s4); }   /* bottom: no dead space under the board (Sivan, 18 Nov) */
   .side { grid-column: 1; grid-row: 1; align-self: center; padding: 0; }
   .goal, .tray { grid-column: 2; grid-row: 1; justify-self: start; align-self: center; }
   .goal { grid-template-columns: auto auto; align-items: center; justify-items: start; column-gap: var(--s4); row-gap: 0; }
@@ -246,3 +246,26 @@ body.done #brush { opacity: 0; }
 @media (max-width: 420px) { .gate-long { display: none; } .gate-short { display: inline; } .gate { padding: 0 var(--s3); font-size: 15px; } .howto p { font-size: 13.5px; } }
 @media (orientation: portrait) { .howto { padding-left: max(var(--s4), env(safe-area-inset-left, 0px)); padding-right: max(var(--s4), env(safe-area-inset-right, 0px)); } }
 @media (orientation: landscape) and (max-height: 380px) { .rule { width: 72px; padding: var(--s2); } }
+
+/* Sivan, 18 Nov 2026: never shrink to squeeze in. When the Treasure Hunt board needs more height than the screen has, the
+   page grows and scrolls down; the purple band stays on top. */
+.stage.tall { grid-template-rows: var(--band) auto auto; overflow-y: auto; overscroll-behavior: contain; }
+.stage.tall .band { position: sticky; top: 0; }
+.stage.tall .field { grid-template-rows: none; grid-auto-rows: auto; min-height: auto; }
+/* a phone on its side: Kido Builds shapes break into two columns instead of running under the band */
+@media (orientation: landscape) and (max-height: 420px) { .tray { grid-template-columns: repeat(2, auto); } }
+@media (orientation: landscape) and (max-height: 520px) { .tray:has(> :nth-child(4)) { grid-template-columns: repeat(2, auto); } }
+/* the narrowest phones (320px, e.g. iPhone SE 1st gen): the top row (Kido · rule · basket) needs 340px. Less side air and
+   Kido following the screen width (22vw) bring it inside the screen; cards, rule and basket keep their size. (18 Nov) */
+@media (orientation: portrait) and (max-width: 360px) {
+  :root { --kido-w: 22vw; }
+  .field { padding-left: max(var(--s3), env(safe-area-inset-left, 0px)); padding-right: max(var(--s3), env(safe-area-inset-right, 0px)); column-gap: var(--s3); }
+  .goal { column-gap: var(--s3); }
+}
+@media (orientation: portrait) and (max-width: 360px) {
+  /* Kido Builds on the narrowest phones: three 64px shapes still fit in one row beside Kido with a little less air between them */
+  .tray { gap: var(--s2); }
+}
+/* Kido Builds, phone upright: the picture fits the room left between the shapes and the How to play line, keeping its
+   proportions, so it never runs under that line (18 Nov) */
+@media (orientation: portrait) { .page { height: min(100%, calc((100vw - 32px) * 170 / 200)); width: auto; max-width: 100%; } }

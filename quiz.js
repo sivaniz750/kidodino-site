@@ -59,7 +59,7 @@
           '<p>' + K.line + '</p>' +
           '<p class="t-small say">Say it together: “' + K.say + '”</p>' +
           '<div class="result-actions">' +
-            '<a class="btn" href="downloads/kido-' + K.page + '-coloring-page.pdf" download>Get my coloring page</a>' +
+            '<a class="btn" href="downloads/kido-' + K.page + '-coloring-page_v2_18nov.pdf" download="kido-' + K.page + '-coloring-page.pdf">Get my coloring page</a>' +
             '<button type="button" class="btn btn-2" id="quiz-again">Play again</button>' +
           '</div>' +
         '</div>' +

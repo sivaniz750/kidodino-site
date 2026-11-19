@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://kidodino.com/sitemap.xml
